@@ -659,7 +659,7 @@ button { font-family: inherit; cursor: pointer; }
   // cities = array of explicit (col,row,name) — will be snapped to nearest land.
   const COUNTRIES = [
     {
-      id: 'USA', name: 'United States', short: 'USA', color: '#4f86d6', tint: '#2a4670',
+      id: 'USA', name: 'United States', short: 'USA', color: '#3aa8ff', tint: '#0e3a66',
       cx: 24, cy: 15, radius: 10,
       cities: [
         { col: 16, row: 13, name: 'Seattle' },
@@ -672,7 +672,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'UK',  name: 'United Kingdom', short: 'UK',  color: '#c85050', tint: '#6e2a2a',
+      id: 'UK',  name: 'United Kingdom', short: 'UK',  color: '#ff5a3c', tint: '#5a1a0a',
       cx: 45, cy: 11, radius: 3,
       cities: [
         { col: 45, row: 11, name: 'London' },
@@ -681,7 +681,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'FRA', name: 'France', short: 'FRA', color: '#5a6ed3', tint: '#2f3a72',
+      id: 'FRA', name: 'France', short: 'FRA', color: '#9b6dff', tint: '#3a1e6e',
       cx: 48, cy: 14, radius: 4,
       cities: [
         { col: 48, row: 13, name: 'Paris' },
@@ -690,7 +690,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'GER', name: 'Germany', short: 'GER', color: '#b6b6b6', tint: '#3e3e3e',
+      id: 'GER', name: 'Germany', short: 'GER', color: '#d4d4d4', tint: '#2a2a2a',
       cx: 51, cy: 12, radius: 4,
       cities: [
         { col: 51, row: 12, name: 'Berlin' },
@@ -700,7 +700,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'ITA', name: 'Italy', short: 'ITA', color: '#5cb87f', tint: '#2e6b46',
+      id: 'ITA', name: 'Italy', short: 'ITA', color: '#3ad88a', tint: '#10522e',
       cx: 52, cy: 16, radius: 4,
       cities: [
         { col: 52, row: 15, name: 'Milan' },
@@ -709,7 +709,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'SOV', name: 'Soviet Union', short: 'SOV', color: '#c43838', tint: '#6a1f1f',
+      id: 'SOV', name: 'Soviet Union', short: 'SOV', color: '#d8252b', tint: '#560b0e',
       cx: 62, cy: 9, radius: 18,
       cities: [
         { col: 54, row: 9, name: 'Leningrad' },
@@ -721,7 +721,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'CHN', name: 'China', short: 'CHN', color: '#d99036', tint: '#7a4f1c',
+      id: 'CHN', name: 'China', short: 'CHN', color: '#ffb01e', tint: '#5a3a08',
       cx: 78, cy: 16, radius: 6,
       cities: [
         { col: 78, row: 14, name: 'Beijing' },
@@ -731,7 +731,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'JPN', name: 'Japan', short: 'JPN', color: '#d44a7a', tint: '#742344',
+      id: 'JPN', name: 'Japan', short: 'JPN', color: '#ff4dc4', tint: '#5a0e3a',
       cx: 85, cy: 15, radius: 2,
       cities: [
         { col: 85, row: 14, name: 'Tokyo' },
@@ -907,8 +907,18 @@ button { font-family: inherit; cursor: pointer; }
   function canTraverse(unitDomain, terrain) {
     if (unitDomain === 'air') return true;
     if (unitDomain === 'sea') return terrain === 'ocean';
-    // land
-    return terrain !== 'ocean';
+    // land — can also move onto ocean (acts as "embarked"), but cannot attack from water
+    return true;
+  }
+
+  // True if a unit is currently on water (only relevant for land units; sea units are always "on water")
+  function isAtSea(unit, tile) {
+    return UNIT_TYPES[unit.type].domain === 'land' && tile && tile.terrain === 'ocean';
+  }
+  // True if a unit can attack from its current tile
+  function canAttackFrom(unit, tile) {
+    if (UNIT_TYPES[unit.type].domain === 'land' && tile && tile.terrain === 'ocean') return false;
+    return true;
   }
 
   // Combat — returns { attackerHpLoss, defenderHpLoss, attackerWins, log }
@@ -942,7 +952,7 @@ button { font-family: inherit; cursor: pointer; }
     };
   }
 
-  window.Units = { UNIT_TYPES, UNIT_ORDER, canTraverse, resolveCombat, createUnit };
+  window.Units = { UNIT_TYPES, UNIT_ORDER, canTraverse, isAtSea, canAttackFrom, resolveCombat, createUnit };
 })();
 
 </script>
@@ -1159,7 +1169,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: 'TOTAL VICTORY', defeat: 'DEFEAT',
       victory_sub: 'All capitals fall under your banner.',
       defeat_sub: 'Your capitals have been overrun.', new_campaign: 'New Campaign',
-      tt_hex: 'Hex', language: 'Language', ai_speed: 'AI Speed',
+      tt_hex: 'Hex', language: 'Language', ai_speed: 'AI Speed', at_sea: 'AT SEA',
       speed_slow: 'Slow', speed_normal: 'Normal', speed_fast: 'Fast', speed_skip: 'Skip',
       log_commence: 'Operations commence. You command {nation}.',
       log_capture: '▸ {city} captured from {from}',
@@ -1190,7 +1200,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: 'TOTALER SIEG', defeat: 'NIEDERLAGE',
       victory_sub: 'Alle Hauptstädte stehen unter deiner Fahne.',
       defeat_sub: 'Deine Hauptstädte sind überrannt worden.', new_campaign: 'Neuer Feldzug',
-      tt_hex: 'Hex', language: 'Sprache', ai_speed: 'KI-Tempo',
+      tt_hex: 'Hex', language: 'Sprache', ai_speed: 'KI-Tempo', at_sea: 'AUF SEE',
       speed_slow: 'Langsam', speed_normal: 'Normal', speed_fast: 'Schnell', speed_skip: 'Überspr.',
       log_commence: 'Operationen beginnen. Du befehligst {nation}.',
       log_capture: '▸ {city} von {from} erobert',
@@ -1221,7 +1231,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: 'VICTOIRE TOTALE', defeat: 'DÉFAITE',
       victory_sub: 'Toutes les capitales tombent sous votre bannière.',
       defeat_sub: 'Vos capitales ont été conquises.', new_campaign: 'Nouvelle Campagne',
-      tt_hex: 'Hex', language: 'Langue', ai_speed: 'Vitesse IA',
+      tt_hex: 'Hex', language: 'Langue', ai_speed: 'Vitesse IA', at_sea: 'EN MER',
       speed_slow: 'Lent', speed_normal: 'Normal', speed_fast: 'Rapide', speed_skip: 'Passer',
       log_commence: 'Opérations en cours. Vous commandez {nation}.',
       log_capture: '▸ {city} capturée de {from}',
@@ -1252,7 +1262,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: 'VICTORIA TOTAL', defeat: 'DERROTA',
       victory_sub: 'Todas las capitales caen bajo tu bandera.',
       defeat_sub: 'Tus capitales han sido tomadas.', new_campaign: 'Nueva Campaña',
-      tt_hex: 'Hex', language: 'Idioma', ai_speed: 'Veloc. IA',
+      tt_hex: 'Hex', language: 'Idioma', ai_speed: 'Veloc. IA', at_sea: 'EN EL MAR',
       speed_slow: 'Lento', speed_normal: 'Normal', speed_fast: 'Rápido', speed_skip: 'Saltar',
       log_commence: 'Operaciones comienzan. Comandas {nation}.',
       log_capture: '▸ {city} capturada de {from}',
@@ -1283,7 +1293,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: 'VITTORIA TOTALE', defeat: 'SCONFITTA',
       victory_sub: 'Tutte le capitali cadono sotto la tua bandiera.',
       defeat_sub: 'Le tue capitali sono state invase.', new_campaign: 'Nuova Campagna',
-      tt_hex: 'Hex', language: 'Lingua', ai_speed: 'Veloc. IA',
+      tt_hex: 'Hex', language: 'Lingua', ai_speed: 'Veloc. IA', at_sea: 'IN MARE',
       speed_slow: 'Lenta', speed_normal: 'Normale', speed_fast: 'Veloce', speed_skip: 'Salta',
       log_commence: 'Operazioni avviate. Comandi {nation}.',
       log_capture: '▸ {city} catturata da {from}',
@@ -1314,7 +1324,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: 'ПОЛНАЯ ПОБЕДА', defeat: 'ПОРАЖЕНИЕ',
       victory_sub: 'Все столицы под твоим знаменем.',
       defeat_sub: 'Твои столицы пали.', new_campaign: 'Новая Кампания',
-      tt_hex: 'Гекс', language: 'Язык', ai_speed: 'Скор. ИИ',
+      tt_hex: 'Гекс', language: 'Язык', ai_speed: 'Скор. ИИ', at_sea: 'В МОРЕ',
       speed_slow: 'Медл.', speed_normal: 'Норма', speed_fast: 'Быстро', speed_skip: 'Пропуск',
       log_commence: 'Операции начаты. Ты ведёшь {nation}.',
       log_capture: '▸ {city} захвачен у {from}',
@@ -1345,7 +1355,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: '完全勝利', defeat: '敗北',
       victory_sub: '全ての首都が貴官の旗の下に。',
       defeat_sub: '首都が陥落した。', new_campaign: '新作戦',
-      tt_hex: 'Hex', language: '言語', ai_speed: 'AI速度',
+      tt_hex: 'Hex', language: '言語', ai_speed: 'AI速度', at_sea: '航行中',
       speed_slow: '遅い', speed_normal: '普通', speed_fast: '速い', speed_skip: '省略',
       log_commence: '作戦開始。貴官は{nation}を指揮する。',
       log_capture: '▸ {city}を{from}から奪取',
@@ -1376,7 +1386,7 @@ button { font-family: inherit; cursor: pointer; }
       victory: '全面胜利', defeat: '失败',
       victory_sub: '所有首都皆在你的旗帜下。',
       defeat_sub: '你的首都已被攻陷。', new_campaign: '新战役',
-      tt_hex: '格', language: '语言', ai_speed: 'AI 速度',
+      tt_hex: '格', language: '语言', ai_speed: 'AI 速度', at_sea: '海上',
       speed_slow: '慢', speed_normal: '正常', speed_fast: '快', speed_skip: '跳过',
       log_commence: '作战开始。你统率{nation}。',
       log_capture: '▸ {city} 被从 {from} 攻陷',
@@ -1575,7 +1585,7 @@ function CityMarker({ tile, country }) {
   );
 }
 
-function UnitMarker({ unit, country, selected }) {
+function UnitMarker({ unit, country, selected, atSea }) {
   const { hexToPixel } = window.HexMath;
   const { x, y } = hexToPixel(unit.col, unit.row);
   const color = country ? country.color : '#888';
@@ -1597,6 +1607,13 @@ function UnitMarker({ unit, country, selected }) {
       pointerEvents="none"
     >
       <ellipse cx="0" cy="6" rx="6" ry="1.5" fill="rgba(0,0,0,0.45)" />
+      {/* Embarked transport hull beneath the badge when land unit is on water */}
+      {atSea && (
+        <g pointerEvents="none">
+          <path d="M -9 4 L 9 4 L 7 7 L -7 7 Z" fill="#6da3e6" stroke="#0b1118" strokeWidth="0.6" />
+          <path d="M -10 7.4 q 5 -1 10 0 q 5 -1 10 0" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
+        </g>
+      )}
       <rect x="-7" y="-7" width="14" height="14" rx="2" fill={tint} stroke={color} strokeWidth={selected ? 1.8 : 1.0} />
       <g transform="scale(0.65)">
         <UnitGlyph type={unit.type} color="#fff" />
@@ -1902,7 +1919,7 @@ function TopBar({ turn, playerCountry, gold, prod, units, cities, onEndTurn, aiT
   );
 }
 
-function UnitPanel({ unit, country, onMoveMode, onDisband, moveMode, isPlayerUnit }) {
+function UnitPanel({ unit, country, onMoveMode, onDisband, moveMode, isPlayerUnit, atSea }) {
   const _ = useLang();
   const T = window.Units.UNIT_TYPES[unit.type];
   return (
@@ -1916,7 +1933,10 @@ function UnitPanel({ unit, country, onMoveMode, onDisband, moveMode, isPlayerUni
         </div>
         <div>
           <div className="name">{uName(unit.type)}</div>
-          <div className="meta">{country.short} · {T.domain.toUpperCase()}{T.stealth ? ' · ' + t('stealth') : ''}</div>
+          <div className="meta">
+            {country.short} · {T.domain.toUpperCase()}{T.stealth ? ' · ' + t('stealth') : ''}
+            {atSea && <span style={{ marginLeft: 6, color: '#6da3e6' }}>· {t('at_sea')}</span>}
+          </div>
         </div>
       </div>
       <div className="stats-grid">
@@ -2271,6 +2291,9 @@ function App() {
     if (sel.acted) return { reach: new Set(), attack: new Set() };
     const { reachable } = window.HexMath.reachable(sel.col, sel.row, sel.moves, isPassable(state, sel));
     const reach = new Set(reachable.map(r => r.col + ',' + r.row));
+    // Attack disabled entirely when a land unit is on water
+    const selTile = state.world.tileAt(sel.col, sel.row);
+    if (!window.Units.canAttackFrom(sel, selTile)) return { reach, attack: new Set() };
     // Attackable: enemies within attack range (1, or 2 for artillery/bomber)
     const T = window.Units.UNIT_TYPES[sel.type];
     const range = (sel.type === 'artillery' || sel.type === 'bomber') ? 2 : 1;
@@ -2352,6 +2375,9 @@ function App() {
   }
 
   function doPlayerAttack(unit, col, row) {
+    // Block attack if attacker is on water (land unit at sea)
+    const fromTile = state.world.tileAt(unit.col, unit.row);
+    if (!window.Units.canAttackFrom(unit, fromTile)) return;
     setState(prev => {
       const s = { ...prev, units: prev.units.map(u => ({ ...u })) };
       const attacker = s.units.find(x => x.id === unit.id);
@@ -2634,14 +2660,20 @@ function App() {
 
   function planAIAction(s, unit, country) {
     if (unit.acted || unit.moves <= 0) return null;
-    // 1) Attack adjacent
-    const adj = window.HexMath.neighbors(unit.col, unit.row);
-    for (const n of adj) {
-      const target = s.units.find(u => u.col === n.col && u.row === n.row && u.owner !== country);
-      if (target) {
-        const tt = s.world.tileAt(n.col, n.row);
-        if (!window.Units.canTraverse(window.Units.UNIT_TYPES[unit.type].domain, tt.terrain)) continue;
-        return { type: 'attack', attackerId: unit.id, defenderId: target.id, col: n.col, row: n.row };
+    const myTile = s.world.tileAt(unit.col, unit.row);
+    const atSea = !window.Units.canAttackFrom(unit, myTile);
+    // 1) Attack adjacent — only if not at sea
+    if (!atSea) {
+      const adj = window.HexMath.neighbors(unit.col, unit.row);
+      for (const n of adj) {
+        const target = s.units.find(u => u.col === n.col && u.row === n.row && u.owner !== country);
+        if (target) {
+          const tt = s.world.tileAt(n.col, n.row);
+          // Sea units can only "attack" ocean tiles; land units can attack land tiles
+          if (window.Units.UNIT_TYPES[unit.type].domain === 'sea' && tt.terrain !== 'ocean') continue;
+          if (window.Units.UNIT_TYPES[unit.type].domain === 'land' && tt.terrain === 'ocean') continue;
+          return { type: 'attack', attackerId: unit.id, defenderId: target.id, col: n.col, row: n.row };
+        }
       }
     }
     // 2) Step toward target
@@ -2831,6 +2863,7 @@ function App() {
               onDisband={() => disbandUnit(sel.id)}
               moveMode={moveMode}
               isPlayerUnit={sel.owner === state.playerId}
+              atSea={window.Units.isAtSea(sel, state.world.tileAt(sel.col, sel.row))}
             />
           ) : selTile && selTile.city ? null : (
             <div className="panel-section empty">
