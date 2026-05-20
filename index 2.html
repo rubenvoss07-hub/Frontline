@@ -1,0 +1,2940 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FRONTLINE — Grand Strategy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" />
+<style>
+:root {
+  --bg: #0b1118;
+  --bg-2: #0f1722;
+  --panel: #131d2b;
+  --panel-2: #182336;
+  --line: #243349;
+  --line-2: #2e4060;
+  --ink: #d9e3f1;
+  --ink-dim: #8b9bb4;
+  --ink-mute: #5f6f88;
+  --accent: #d9b26a;       /* brass */
+  --accent-2: #6da3e6;     /* radar blue */
+  --danger: #d6533c;
+  --good: #6abf7a;
+  --ocean: #0d1d2e;
+  --ocean-deep: #0a1828;
+  --land: #c6b48a;         /* parchment */
+  --land-hi: #d9c89b;
+  --land-lo: #a89972;
+  --land-mtn: #8b7d5d;
+  --grid: rgba(255,255,255,0.06);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; overflow: hidden; }
+#root { height: 100%; }
+
+button { font-family: inherit; cursor: pointer; }
+.mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
+
+/* --- Top bar --- */
+.topbar {
+  display: flex; align-items: center; gap: 18px;
+  padding: 10px 18px;
+  background: linear-gradient(180deg, #0e1724 0%, #0a121d 100%);
+  border-bottom: 1px solid var(--line);
+  height: 56px;
+  position: relative; z-index: 5;
+}
+.topbar .brand {
+  font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 13px;
+  letter-spacing: 0.18em; color: var(--accent);
+}
+.topbar .brand .dot { color: var(--danger); }
+.topbar .sep { width: 1px; height: 28px; background: var(--line); }
+.topbar .stat {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 0;
+}
+.topbar .stat .lbl {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.18em; color: var(--ink-mute);
+}
+.topbar .stat .val {
+  font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 500; color: var(--ink);
+  line-height: 1;
+}
+.topbar .stat .val.gold { color: var(--accent); }
+.topbar .stat .val.prod { color: var(--accent-2); }
+.topbar .country-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.topbar .country-tag .swatch {
+  width: 14px; height: 14px; border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4);
+}
+.spacer { flex: 1; }
+.btn-end {
+  background: linear-gradient(180deg, #d9b26a 0%, #b88f3f 100%);
+  color: #1a1308; border: 1px solid #8a6a26;
+  padding: 10px 18px; border-radius: 4px;
+  font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+  letter-spacing: 0.1em; font-size: 12px; text-transform: uppercase;
+  box-shadow: 0 2px 0 #6a5219, 0 6px 14px rgba(0,0,0,0.45);
+  transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+.btn-end:hover { filter: brightness(1.05); }
+.btn-end:active { transform: translateY(1px); box-shadow: 0 1px 0 #6a5219, 0 3px 6px rgba(0,0,0,0.4); }
+.btn-end:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* --- Language & speed dropdowns --- */
+.dropdown { position: relative; }
+.dd-trigger {
+  background: var(--bg-2); color: var(--ink); border: 1px solid var(--line);
+  padding: 6px 10px; height: 34px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  letter-spacing: 0.12em; display: inline-flex; align-items: center; gap: 6px;
+}
+.dd-trigger:hover { background: var(--panel-2); border-color: var(--line-2); }
+.dd-trigger .lbl { color: var(--ink-mute); font-size: 9px; text-transform: uppercase; letter-spacing: 0.2em; }
+.dd-trigger .chev { color: var(--ink-mute); font-size: 9px; }
+.dd-panel {
+  position: absolute; top: calc(100% + 4px); right: 0;
+  background: var(--panel); border: 1px solid var(--line-2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  z-index: 20; min-width: 160px;
+  display: grid; padding: 4px;
+}
+.dd-item {
+  background: transparent; color: var(--ink);
+  border: none; text-align: left;
+  padding: 8px 10px; cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  display: flex; align-items: center; gap: 8px;
+}
+.dd-item:hover { background: var(--bg-2); }
+.dd-item.active { background: var(--bg-2); color: var(--accent); }
+.dd-item .flag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink-mute); padding: 2px 5px; border: 1px solid var(--line); letter-spacing: 0.1em; }
+.dd-item.active .flag { color: var(--accent); border-color: var(--accent); }
+
+/* --- Higher graphics polish --- */
+@keyframes flicker {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+.map-svg { filter: contrast(1.04) saturate(1.04); }
+
+/* Vignette over map */
+.map-wrap::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.55) 100%);
+  z-index: 1;
+}
+/* Scanline overlay (subtle) */
+.map-wrap::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.012) 0px,
+    rgba(255,255,255,0.012) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+
+/* Unit motion */
+.unit-marker { transition: transform 0.45s cubic-bezier(0.4, 0.0, 0.2, 1); will-change: transform; }
+
+/* Combat flash & shake */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, 1px) rotate(-2deg); }
+  20% { transform: translate(2px, -1px) rotate(2deg); }
+  30% { transform: translate(-2px, 2px) rotate(-1deg); }
+  40% { transform: translate(2px, 1px) rotate(1deg); }
+  50% { transform: translate(-1px, -2px) rotate(-2deg); }
+  60% { transform: translate(1px, 2px) rotate(1deg); }
+  70% { transform: translate(-2px, -1px) rotate(-1deg); }
+  80% { transform: translate(2px, -2px) rotate(2deg); }
+  90% { transform: translate(-1px, 1px) rotate(-1deg); }
+}
+.combat-shake { animation: shake 0.5s ease-in-out; }
+
+@keyframes burst {
+  0% { transform: scale(0.2); opacity: 1; }
+  60% { opacity: 0.9; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+.combat-burst { animation: burst 0.7s ease-out forwards; transform-origin: center; }
+
+@keyframes flash {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.7; }
+}
+
+/* Damage popups */
+@keyframes pop-up {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(-28px); opacity: 0; }
+}
+.dmg-popup { animation: pop-up 1.2s ease-out forwards; pointer-events: none; }
+
+/* Capture flag plant */
+@keyframes flag-plant {
+  0% { transform: scale(0.0); opacity: 0; }
+  40% { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(1.0); opacity: 1; }
+}
+.capture-flag { animation: flag-plant 0.6s ease-out; transform-origin: center; }
+
+/* Selection ring already pulses */
+.sel-ring { animation: pulse 1.4s ease-in-out infinite; }
+
+/* AI cursor */
+.ai-cursor {
+  pointer-events: none;
+  transition: transform 0.55s cubic-bezier(0.5, 0, 0.2, 1);
+}
+.ai-cursor circle { animation: pulse 1.2s ease-in-out infinite; }
+
+/* Build burst (new unit appears) */
+@keyframes deploy {
+  0% { transform: scale(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.unit-deploy { animation: deploy 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); transform-box: fill-box; transform-origin: center; }
+
+/* Reachable highlight subtle pulse */
+@keyframes reachable-pulse {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 0.55; }
+}
+.reachable-overlay { animation: reachable-pulse 1.8s ease-in-out infinite; }
+
+/* Topbar gradient richer */
+.topbar {
+  background: linear-gradient(180deg, #131e2c 0%, #0a121d 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.45);
+}
+
+/* Sidebar nicer */
+.sidebar { background: linear-gradient(180deg, var(--panel) 0%, #101926 100%); }
+
+
+/* --- Main layout --- */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  height: calc(100% - 56px);
+}
+.map-wrap {
+  position: relative; overflow: hidden;
+  background: radial-gradient(ellipse at center, #0d1827 0%, #06090f 100%);
+}
+.map-svg { display: block; user-select: none; cursor: grab; }
+.map-svg.dragging { cursor: grabbing; }
+.map-svg.moving { cursor: crosshair; }
+
+/* --- Sidebar --- */
+.sidebar {
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.panel-section {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+}
+.panel-section h3 {
+  margin: 0 0 10px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em;
+  color: var(--ink-dim); font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-section h3::before {
+  content: ''; width: 6px; height: 6px; background: var(--accent); display: inline-block;
+}
+.panel-section.empty p {
+  color: var(--ink-mute); font-size: 12px; margin: 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.unit-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  padding: 12px;
+  display: grid; grid-template-columns: 36px 1fr;
+  gap: 10px; align-items: center;
+}
+.unit-card .icon {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-2); border: 1px solid var(--line);
+}
+.unit-card .name { font-weight: 600; font-size: 14px; }
+.unit-card .meta { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.12em; }
+.stats-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin-top: 10px;
+}
+.stat-pill {
+  background: var(--bg-2); border: 1px solid var(--line);
+  padding: 8px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.stat-pill .k { font-size: 9px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.16em; }
+.stat-pill .v { font-size: 15px; color: var(--ink); margin-top: 2px; font-weight: 500; }
+.stat-pill .v.atk { color: var(--danger); }
+.stat-pill .v.def { color: var(--accent-2); }
+.stat-pill .v.mv { color: var(--good); }
+
+.move-bar {
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--ink-dim); text-transform: uppercase; letter-spacing: 0.15em;
+}
+.move-bar .pips { display: flex; gap: 3px; }
+.move-bar .pip { width: 12px; height: 6px; background: var(--line); }
+.move-bar .pip.on { background: var(--good); }
+
+.actions { display: flex; gap: 6px; margin-top: 10px; }
+.actions button {
+  flex: 1; background: var(--bg-2); color: var(--ink);
+  border: 1px solid var(--line); padding: 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
+.actions button:hover:not(:disabled) { background: var(--line); border-color: var(--line-2); }
+.actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.actions button.primary { background: var(--accent-2); color: #08111c; border-color: var(--accent-2); }
+
+/* City panel */
+.city-head {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.city-head .ring {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--accent); display: inline-flex; align-items: center; justify-content: center;
+}
+.city-head .ring .star { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+.city-head .name { font-weight: 600; font-size: 15px; }
+.city-head .owner { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.14em; }
+
+.build-list { display: grid; gap: 6px; }
+.build-btn {
+  display: grid; grid-template-columns: 28px 1fr auto; gap: 10px;
+  align-items: center;
+  background: var(--bg-2); border: 1px solid var(--line);
+  padding: 8px 10px;
+  color: var(--ink); text-align: left;
+}
+.build-btn:hover:not(:disabled) { background: var(--panel-2); border-color: var(--line-2); }
+.build-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.build-btn .ic { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: var(--ink-dim); }
+.build-btn .nm { font-size: 12px; font-weight: 500; }
+.build-btn .cost { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-mute); display: flex; gap: 8px; }
+.build-btn .cost .g { color: var(--accent); }
+.build-btn .cost .p { color: var(--accent-2); }
+
+.queue-row {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  padding: 6px 8px; background: var(--bg-2); border: 1px solid var(--line);
+  color: var(--ink-dim);
+}
+.queue-row .ic { color: var(--accent-2); }
+.queue-row .tt { flex: 1; color: var(--ink); }
+.queue-row .countdown { color: var(--accent); }
+
+/* Country select */
+.select-shell {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, #0e1724 0%, #050810 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.select-shell .head {
+  text-align: center; margin-bottom: 28px;
+}
+.select-shell .kicker {
+  font-family: 'IBM Plex Mono', monospace; color: var(--accent);
+  letter-spacing: 0.3em; font-size: 11px; margin-bottom: 8px;
+}
+.select-shell h1 {
+  font-family: 'Inter', sans-serif; font-weight: 700;
+  font-size: 56px; letter-spacing: -0.02em; margin: 0;
+}
+.select-shell h1 .accent { color: var(--accent); }
+.select-shell .sub {
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px;
+  color: var(--ink-mute); margin-top: 10px; letter-spacing: 0.1em;
+}
+.country-grid {
+  display: grid; grid-template-columns: repeat(4, 200px); gap: 14px;
+  margin-top: 8px;
+}
+.country-card {
+  background: var(--panel); border: 1px solid var(--line);
+  padding: 16px; text-align: left;
+  color: var(--ink);
+  display: flex; flex-direction: column; gap: 8px;
+  transition: transform 0.08s ease, border-color 0.08s ease;
+}
+.country-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.country-card .row { display: flex; align-items: center; gap: 10px; }
+.country-card .swatch { width: 22px; height: 22px; border-radius: 4px; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4); }
+.country-card .nm { font-weight: 600; font-size: 16px; }
+.country-card .tag { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.15em; }
+.country-card .stats { display: flex; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--ink-dim); margin-top: auto; }
+.country-card .stats span b { color: var(--ink); font-weight: 500; }
+
+.footer-hint {
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--ink-mute); letter-spacing: 0.2em;
+}
+
+/* Tooltip */
+.tooltip {
+  position: fixed; pointer-events: none; z-index: 50;
+  background: rgba(11, 17, 24, 0.95);
+  border: 1px solid var(--line-2);
+  padding: 8px 10px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  color: var(--ink); min-width: 140px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.tooltip .row { display: flex; justify-content: space-between; gap: 12px; }
+.tooltip .row .k { color: var(--ink-mute); text-transform: uppercase; font-size: 9px; letter-spacing: 0.14em; }
+.tooltip .row .v { color: var(--ink); }
+.tooltip hr { border: none; border-top: 1px dashed var(--line); margin: 6px 0; }
+
+/* Combat log */
+.log-feed {
+  max-height: 200px; overflow-y: auto;
+  display: flex; flex-direction: column-reverse; gap: 4px;
+}
+.log-feed::-webkit-scrollbar { width: 6px; }
+.log-feed::-webkit-scrollbar-thumb { background: var(--line); }
+.log-row {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+  color: var(--ink-dim);
+  padding: 4px 6px; background: var(--bg-2); border-left: 2px solid var(--line);
+}
+.log-row.combat { border-left-color: var(--danger); color: var(--ink); }
+.log-row.capture { border-left-color: var(--accent); color: var(--accent); }
+.log-row.build { border-left-color: var(--good); }
+.log-row .t { color: var(--ink-mute); margin-right: 6px; }
+
+/* Mini map */
+.minimap {
+  position: absolute; bottom: 12px; right: 12px;
+  background: rgba(11, 17, 24, 0.9);
+  border: 1px solid var(--line-2);
+  padding: 6px;
+  z-index: 4;
+}
+.minimap canvas { display: block; }
+.minimap .lbl {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.16em;
+  margin-bottom: 4px;
+}
+
+/* Turn banner */
+.turn-banner {
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+  background: rgba(11, 17, 24, 0.92); border: 1px solid var(--line-2);
+  padding: 8px 16px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-dim);
+  z-index: 3;
+  display: flex; align-items: center; gap: 10px;
+}
+.turn-banner .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--good); box-shadow: 0 0 8px var(--good);
+}
+.turn-banner.ai .dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+/* Hex hover/select */
+.hex-base { transition: filter 0.08s ease; }
+.hex-hover { filter: brightness(1.15); }
+
+/* Selection ring */
+@keyframes pulse {
+  0% { stroke-opacity: 1; stroke-width: 2.5; }
+  50% { stroke-opacity: 0.6; stroke-width: 3.5; }
+  100% { stroke-opacity: 1; stroke-width: 2.5; }
+}
+.sel-ring { animation: pulse 1.4s ease-in-out infinite; }
+
+/* Scrollbar for sidebar */
+.sidebar { overflow-y: auto; }
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--line); }
+
+/* End-of-game overlay */
+.endgame {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(5, 8, 14, 0.85);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.endgame .card {
+  background: var(--panel); border: 1px solid var(--accent);
+  padding: 40px 60px; text-align: center;
+}
+.endgame .card h2 {
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 38px;
+  margin: 0 0 8px; letter-spacing: -0.01em;
+}
+.endgame .card p {
+  font-family: 'IBM Plex Mono', monospace; color: var(--ink-dim);
+  letter-spacing: 0.1em; font-size: 12px; margin: 0 0 24px;
+}
+.endgame .card.victory h2 { color: var(--good); }
+.endgame .card.defeat h2 { color: var(--danger); }
+.endgame .card button {
+  background: var(--accent); color: #1a1308; border: none;
+  padding: 10px 24px;
+  font-family: 'IBM Plex Mono', monospace; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase; font-size: 11px;
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script>
+// hexmath.js — flat-top, odd-q offset hex grid math with horizontal wrap.
+// Exposes globals on window.HexMath
+
+(function () {
+  const MAP_W = 60;
+  const MAP_H = 22;
+  const HEX_SIZE = 14; // outer radius
+
+  // Flat-top pixel positions (odd-q offset)
+  function hexToPixel(col, row) {
+    const x = HEX_SIZE * 1.5 * col;
+    const y = HEX_SIZE * Math.sqrt(3) * (row + 0.5 * (col & 1));
+    return { x, y };
+  }
+
+  // Polygon points for a flat-top hex centered at (cx, cy)
+  function hexPoints(cx, cy, r = HEX_SIZE) {
+    const pts = [];
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI / 3) * i; // flat-top: 0, 60, 120,...
+      pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+    return pts.map(p => p.join(',')).join(' ');
+  }
+
+  // Neighbors for odd-q offset, flat-top
+  const NEIGHBORS_EVEN = [[+1, 0], [+1, -1], [0, -1], [-1, -1], [-1, 0], [0, +1]];
+  const NEIGHBORS_ODD  = [[+1, +1], [+1, 0], [0, -1], [-1, 0], [-1, +1], [0, +1]];
+
+  function neighbors(col, row) {
+    const ns = (col & 1) ? NEIGHBORS_ODD : NEIGHBORS_EVEN;
+    const result = [];
+    for (const [dc, dr] of ns) {
+      const nr = row + dr;
+      if (nr < 0 || nr >= MAP_H) continue; // no vertical wrap
+      const nc = ((col + dc) % MAP_W + MAP_W) % MAP_W; // horizontal wrap
+      result.push({ col: nc, row: nr });
+    }
+    return result;
+  }
+
+  // Offset -> cube for distance
+  function offsetToCube(col, row) {
+    const x = col;
+    const z = row - (col - (col & 1)) / 2;
+    const y = -x - z;
+    return { x, y, z };
+  }
+
+  function cubeDistance(a, b) {
+    return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2;
+  }
+
+  // Distance with horizontal wrap
+  function hexDistance(c1, r1, c2, r2) {
+    let best = Infinity;
+    for (const dx of [-MAP_W, 0, MAP_W]) {
+      const a = offsetToCube(c1, r1);
+      const b = offsetToCube(c2 + dx, r2);
+      const d = cubeDistance(a, b);
+      if (d < best) best = d;
+    }
+    return best;
+  }
+
+  // BFS for movement (cost = 1 per step over passable tiles)
+  // passable(tile) -> boolean. blocker(tile) -> stops here but can be target.
+  function reachable(startCol, startRow, maxMoves, isPassable) {
+    const key = (c, r) => c + ',' + r;
+    const dist = new Map();
+    const start = key(startCol, startRow);
+    dist.set(start, 0);
+    const q = [{ col: startCol, row: startRow, d: 0 }];
+    const result = [];
+    while (q.length) {
+      const cur = q.shift();
+      if (cur.d > 0) result.push(cur);
+      if (cur.d >= maxMoves) continue;
+      for (const n of neighbors(cur.col, cur.row)) {
+        const k = key(n.col, n.row);
+        if (dist.has(k)) continue;
+        if (!isPassable(n.col, n.row, cur.col, cur.row)) continue;
+        dist.set(k, cur.d + 1);
+        q.push({ col: n.col, row: n.row, d: cur.d + 1 });
+      }
+    }
+    return { reachable: result, dist };
+  }
+
+  // BFS path (returns list of {col,row} from start to dest, exclusive of start)
+  function findPath(sCol, sRow, dCol, dRow, isPassable) {
+    const key = (c, r) => c + ',' + r;
+    const came = new Map();
+    came.set(key(sCol, sRow), null);
+    const q = [{ col: sCol, row: sRow }];
+    while (q.length) {
+      const cur = q.shift();
+      if (cur.col === dCol && cur.row === dRow) {
+        // reconstruct
+        const path = [];
+        let k = key(cur.col, cur.row);
+        while (came.get(k)) {
+          const p = came.get(k);
+          path.unshift({ col: cur.col, row: cur.row });
+          cur.col = p.col; cur.row = p.row;
+          k = key(p.col, p.row);
+        }
+        return path;
+      }
+      for (const n of neighbors(cur.col, cur.row)) {
+        const k = key(n.col, n.row);
+        if (came.has(k)) continue;
+        // Allow stepping onto destination even if not passable (so attacks can resolve)
+        const destOk = (n.col === dCol && n.row === dRow);
+        if (!destOk && !isPassable(n.col, n.row, cur.col, cur.row)) continue;
+        came.set(k, { col: cur.col, row: cur.row });
+        q.push(n);
+      }
+    }
+    return null;
+  }
+
+  window.HexMath = {
+    MAP_W, MAP_H, HEX_SIZE,
+    hexToPixel, hexPoints, neighbors,
+    hexDistance, reachable, findPath,
+  };
+})();
+
+</script>
+<script>
+// world.js — Europe-only hand-painted map + country defs.
+// Exposes globals on window.WorldData and window.generateWorld
+
+(function () {
+  // ----- Hand-painted land/ocean map -----
+  // Each row is exactly MAP_W (60) characters. L = land, . = ocean.
+  // Indexed as LAND_MAP[row][col].
+  const LAND_MAP = [
+    '............................................................',
+    '.............LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '.............LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '.............LLLLLLLLLL..LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '......LL.....LLLLLLLLLL..LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '......LL.....LLLLLL.LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '......LLL....LLLLLL..LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '...LL.LLL....LL..LL..LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '...LL.LLL....LLLL...LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '...LL.LLL....LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '.............LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '............LLLLLLLLLLLLLLLLLLLLLLLLLL..LLLLLLLLLLLLLLLL....',
+    '............LLLLLLLLLLLLLLLL....LLLLLL..LLLLLLLLLLLLLLLL....',
+    '.......LLLLLLLLLLLLLLLLLLLL......LLLLL..LLLLLLLLLLLLLLLL....',
+    '......LLLLLLLLLL..LLL.LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '......LLLLLLLLLL..LLL.LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '......LLLLLLLLLL..LLL.LLL.LLLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '.......LLLLLLLLLLLLLL.LLL..LLLLLLLLLLLLLLLLLLLLLLLLLLLLL....',
+    '.................L..........L...............................',
+    '...................LL.......................................',
+    '............................................................',
+    '............................................................',
+  ];
+
+  // ----- Countries (European powers, May 1939) -----
+  const COUNTRIES = [
+    {
+      id: 'UK', name: 'United Kingdom', short: 'UK',
+      color: '#3a8ac6', tint: '#0a2540',
+      cx: 7, cy: 8, radius: 6,
+      cities: [
+        { col: 8, row: 9, name: 'London' },
+        { col: 7, row: 7, name: 'Manchester' },
+        { col: 6, row: 5, name: 'Glasgow' },
+        { col: 4, row: 8, name: 'Dublin' },
+      ],
+    },
+    {
+      id: 'FRA', name: 'France', short: 'FRA',
+      color: '#7a5cd6', tint: '#2a1a52',
+      cx: 13, cy: 11, radius: 5,
+      cities: [
+        { col: 13, row: 10, name: 'Paris' },
+        { col: 14, row: 12, name: 'Lyon' },
+        { col: 14, row: 13, name: 'Marseille' },
+        { col: 12, row: 12, name: 'Bordeaux' },
+      ],
+    },
+    {
+      id: 'ESP', name: 'Spain', short: 'ESP',
+      color: '#d9ad3a', tint: '#5a3f0a',
+      cx: 9, cy: 15, radius: 5,
+      cities: [
+        { col: 9, row: 15, name: 'Madrid' },
+        { col: 11, row: 14, name: 'Barcelona' },
+        { col: 7, row: 15, name: 'Lisbon' },
+        { col: 8, row: 16, name: 'Seville' },
+      ],
+    },
+    {
+      id: 'GER', name: 'Germany', short: 'GER',
+      color: '#cfd1d4', tint: '#26282d',
+      cx: 17, cy: 11, radius: 5,
+      cities: [
+        { col: 18, row: 10, name: 'Berlin' },
+        { col: 16, row: 8, name: 'Hamburg' },
+        { col: 18, row: 12, name: 'Munich' },
+        { col: 16, row: 11, name: 'Cologne' },
+        { col: 20, row: 12, name: 'Vienna' },
+      ],
+    },
+    {
+      id: 'ITA', name: 'Italy', short: 'ITA',
+      color: '#3ac679', tint: '#0e4a2a',
+      cx: 19, cy: 16, radius: 4,
+      cities: [
+        { col: 19, row: 15, name: 'Rome' },
+        { col: 19, row: 13, name: 'Milan' },
+        { col: 20, row: 16, name: 'Naples' },
+        { col: 19, row: 19, name: 'Palermo' },
+      ],
+    },
+    {
+      id: 'POL', name: 'Poland', short: 'POL',
+      color: '#d6533c', tint: '#56110a',
+      cx: 22, cy: 10, radius: 4,
+      cities: [
+        { col: 23, row: 10, name: 'Warsaw' },
+        { col: 23, row: 11, name: 'Krakow' },
+        { col: 22, row: 9, name: 'Gdansk' },
+        { col: 22, row: 11, name: 'Lodz' },
+      ],
+    },
+    {
+      id: 'NRD', name: 'Nordic Union', short: 'NRD',
+      color: '#5fb3d6', tint: '#0e3a52',
+      cx: 18, cy: 5, radius: 8,
+      cities: [
+        { col: 18, row: 6, name: 'Stockholm' },
+        { col: 15, row: 5, name: 'Oslo' },
+        { col: 14, row: 8, name: 'Copenhagen' },
+        { col: 22, row: 6, name: 'Helsinki' },
+      ],
+    },
+    {
+      id: 'BLK', name: 'Balkans', short: 'BLK',
+      color: '#a560d6', tint: '#3a1e56',
+      cx: 25, cy: 15, radius: 5,
+      cities: [
+        { col: 23, row: 13, name: 'Belgrade' },
+        { col: 26, row: 13, name: 'Bucharest' },
+        { col: 23, row: 17, name: 'Athens' },
+        { col: 25, row: 15, name: 'Sofia' },
+      ],
+    },
+    {
+      id: 'SOV', name: 'Soviet Union', short: 'SOV',
+      color: '#d62b3a', tint: '#3a0a0e',
+      cx: 38, cy: 9, radius: 22,
+      cities: [
+        { col: 30, row: 8, name: 'Moscow' },
+        { col: 26, row: 6, name: 'Leningrad' },
+        { col: 27, row: 11, name: 'Kiev' },
+        { col: 36, row: 12, name: 'Stalingrad' },
+        { col: 25, row: 10, name: 'Minsk' },
+        { col: 30, row: 14, name: 'Sevastopol' },
+        { col: 48, row: 8, name: 'Yekaterinburg' },
+        { col: 53, row: 10, name: 'Novosibirsk' },
+      ],
+    },
+  ];
+
+  // Deterministic terrain classification (mountains/hills/forest/plain)
+  function noise(c, r) {
+    const s = Math.sin(c * 12.9898 + r * 78.233) * 43758.5453;
+    return s - Math.floor(s);
+  }
+
+  function isLand(col, row) {
+    if (row < 0 || row >= LAND_MAP.length) return false;
+    if (col < 0 || col >= LAND_MAP[0].length) return false;
+    return LAND_MAP[row][col] === 'L';
+  }
+
+  function classifyLand(col, row) {
+    const n = noise(col * 0.7, row * 0.9);
+    if (n > 0.86) return 'mountain';
+    if (n > 0.68) return 'hill';
+    if (n < 0.18) return 'forest';
+    return 'plain';
+  }
+
+  function generateWorld() {
+    const W = window.HexMath.MAP_W, H = window.HexMath.MAP_H;
+    const tiles = [];
+    for (let row = 0; row < H; row++) {
+      for (let col = 0; col < W; col++) {
+        const land = isLand(col, row);
+        tiles.push({
+          col, row,
+          terrain: land ? classifyLand(col, row) : 'ocean',
+          owner: null,
+          city: null,
+        });
+      }
+    }
+    const idx = (c, r) => r * W + c;
+    const tileAt = (c, r) => tiles[idx(((c % W) + W) % W, r)];
+
+    // Assign ownership: for each land tile, nearest country center within that country's radius.
+    for (const t of tiles) {
+      if (t.terrain === 'ocean') continue;
+      let best = null, bestD = Infinity;
+      for (const c of COUNTRIES) {
+        const d = window.HexMath.hexDistance(t.col, t.row, c.cx, c.cy);
+        if (d > (c.radius || 6)) continue;
+        if (d < bestD) { bestD = d; best = c; }
+      }
+      if (best) t.owner = best.id;
+    }
+
+    // Place cities — snap to nearest land tile if not already land
+    const cities = [];
+    for (const c of COUNTRIES) {
+      for (const ct of c.cities) {
+        let { col, row, name } = ct;
+        let t = tileAt(col, row);
+        if (!t || t.terrain === 'ocean') {
+          // search outward
+          let found = null;
+          for (let r = 1; r < 14 && !found; r++) {
+            for (let dc = -r; dc <= r && !found; dc++) {
+              for (let dr = -r; dr <= r && !found; dr++) {
+                if (Math.abs(dc) + Math.abs(dr) !== r) continue;
+                const nc = ((col + dc) % W + W) % W;
+                const nr = row + dr;
+                if (nr < 0 || nr >= H) continue;
+                const nt = tileAt(nc, nr);
+                if (nt.terrain !== 'ocean') { found = nt; }
+              }
+            }
+          }
+          if (found) { t = found; col = found.col; row = found.row; }
+        }
+        if (t && t.terrain !== 'ocean') {
+          t.city = { name, owner: c.id };
+          t.owner = c.id; // city tile owned
+          cities.push({ col, row, name, owner: c.id });
+        }
+      }
+    }
+
+    return { tiles, cities, W, H, tileAt, idx };
+  }
+
+  window.WorldData = { COUNTRIES };
+  window.generateWorld = generateWorld;
+})();
+
+</script>
+<script>
+// units.js — Unit type defs, combat math, build helpers.
+// Exposes window.Units
+
+(function () {
+  // SVG path/symbol identifiers used by HexMap. Keep simple, distinct silhouettes.
+  const UNIT_TYPES = {
+    infantry:   { name: 'Infantry',    short: 'INF', glyph: 'inf',  attack: 4,  defense: 6, range: 2, cost: { gold: 20, prod: 30  }, buildTime: 2, domain: 'land' },
+    tank:       { name: 'Tank',        short: 'TNK', glyph: 'tnk',  attack: 9,  defense: 6, range: 3, cost: { gold: 50, prod: 80  }, buildTime: 4, domain: 'land' },
+    artillery:  { name: 'Artillery',   short: 'ART', glyph: 'art',  attack: 11, defense: 3, range: 2, cost: { gold: 40, prod: 60  }, buildTime: 3, domain: 'land', ranged: 2 },
+    fighter:    { name: 'Fighter',     short: 'FTR', glyph: 'ftr',  attack: 7,  defense: 6, range: 6, cost: { gold: 60, prod: 70  }, buildTime: 3, domain: 'air' },
+    bomber:     { name: 'Bomber',      short: 'BMR', glyph: 'bmr',  attack: 13, defense: 3, range: 5, cost: { gold: 80, prod: 110 }, buildTime: 5, domain: 'air' },
+    destroyer:  { name: 'Destroyer',   short: 'DST', glyph: 'dst',  attack: 6,  defense: 5, range: 5, cost: { gold: 50, prod: 70  }, buildTime: 3, domain: 'sea' },
+    battleship: { name: 'Battleship',  short: 'BTL', glyph: 'btl',  attack: 12, defense: 9, range: 3, cost: { gold: 100, prod: 150 }, buildTime: 6, domain: 'sea' },
+    submarine:  { name: 'Submarine',   short: 'SUB', glyph: 'sub',  attack: 10, defense: 3, range: 4, cost: { gold: 70, prod: 90  }, buildTime: 4, domain: 'sea', stealth: true },
+  };
+
+  const UNIT_ORDER = ['infantry', 'tank', 'artillery', 'fighter', 'bomber', 'destroyer', 'battleship', 'submarine'];
+
+  function canTraverse(unitDomain, terrain) {
+    if (unitDomain === 'air') return true;
+    if (unitDomain === 'sea') return terrain === 'ocean';
+    // land — can also move onto ocean (acts as "embarked"), but cannot attack from water
+    return true;
+  }
+
+  // True if a unit is currently on water (only relevant for land units; sea units are always "on water")
+  function isAtSea(unit, tile) {
+    return UNIT_TYPES[unit.type].domain === 'land' && tile && tile.terrain === 'ocean';
+  }
+  // True if a unit can attack from its current tile
+  function canAttackFrom(unit, tile) {
+    if (UNIT_TYPES[unit.type].domain === 'land' && tile && tile.terrain === 'ocean') return false;
+    return true;
+  }
+
+  // Combat — returns { attackerHpLoss, defenderHpLoss, attackerWins, log }
+  function resolveCombat(attacker, defender, defenderInCity) {
+    const A = UNIT_TYPES[attacker.type];
+    const D = UNIT_TYPES[defender.type];
+    const atkRoll = A.attack * (attacker.hp / 100) * (0.85 + Math.random() * 0.3);
+    let defStat = D.defense * (defender.hp / 100) * (0.85 + Math.random() * 0.3);
+    if (defenderInCity) defStat *= 1.5;
+    const ratio = atkRoll / (atkRoll + defStat + 0.001);
+    const attackerHpLoss = Math.round((1 - ratio) * 60 + Math.random() * 8);
+    const defenderHpLoss = Math.round(ratio * 70 + Math.random() * 10);
+    return {
+      attackerHpLoss: Math.min(100, Math.max(8, attackerHpLoss)),
+      defenderHpLoss: Math.min(100, Math.max(8, defenderHpLoss)),
+    };
+  }
+
+  let nextId = 1;
+  function createUnit(type, owner, col, row) {
+    const T = UNIT_TYPES[type];
+    return {
+      id: 'u' + (nextId++),
+      type,
+      owner,
+      col, row,
+      hp: 100,
+      moves: T.range,
+      maxMoves: T.range,
+      acted: false,
+    };
+  }
+
+  window.Units = { UNIT_TYPES, UNIT_ORDER, canTraverse, isAtSea, canAttackFrom, resolveCombat, createUnit };
+})();
+
+</script>
+<script>
+// ai.js — Simple rule-based AI for non-player countries.
+// Exposes window.runAITurn(state, countryId) -> { newState, logs }
+
+(function () {
+  const { HexMath, Units } = window;
+
+  // Pick a unit type to build at a city based on country resources & strategy.
+  function pickBuild(state, country, city) {
+    const owned = state.units.filter(u => u.owner === country);
+    const counts = {};
+    for (const u of owned) counts[u.type] = (counts[u.type] || 0) + 1;
+
+    // Need a balanced army. Favor infantry early, then tanks/arty, then air/sea.
+    const totalLand = (counts.infantry || 0) + (counts.tank || 0) + (counts.artillery || 0);
+    const totalAir = (counts.fighter || 0) + (counts.bomber || 0);
+
+    const preferences = [];
+    if (totalLand < 3) preferences.push('infantry', 'infantry', 'tank');
+    else if ((counts.infantry || 0) < (counts.tank || 0) * 2) preferences.push('infantry');
+    else if ((counts.tank || 0) < 3) preferences.push('tank', 'artillery');
+    else if (totalAir < 2) preferences.push('fighter', 'bomber');
+    else preferences.push('tank', 'infantry', 'artillery', 'fighter');
+
+    // If coastal & has gold, consider navy occasionally
+    if (Math.random() < 0.2) preferences.unshift('destroyer');
+
+    // Pick first affordable
+    for (const t of preferences) {
+      const T = Units.UNIT_TYPES[t];
+      if (state.players[country].gold >= T.cost.gold &&
+          state.players[country].prod >= T.cost.prod * 0.5 /* allow partial; cost is shared */ ) {
+        return t;
+      }
+    }
+    return null;
+  }
+
+  function findNearestEnemyCity(state, country, fromCol, fromRow) {
+    let best = null, bestD = Infinity;
+    for (const c of state.cities) {
+      if (c.owner === country) continue;
+      const d = HexMath.hexDistance(fromCol, fromRow, c.col, c.row);
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    return best;
+  }
+
+  function findNearestEnemyUnit(state, country, fromCol, fromRow) {
+    let best = null, bestD = Infinity;
+    for (const u of state.units) {
+      if (u.owner === country) continue;
+      const d = HexMath.hexDistance(fromCol, fromRow, u.col, u.row);
+      if (d < bestD) { bestD = d; best = u; }
+    }
+    return best;
+  }
+
+  // Returns true if (col,row) has an enemy occupant
+  function enemyAt(state, country, col, row) {
+    return state.units.find(u => u.owner !== country && u.col === col && u.row === row);
+  }
+  function friendlyAt(state, country, col, row) {
+    return state.units.find(u => u.owner === country && u.col === col && u.row === row);
+  }
+
+  function isPassableFor(state, unit) {
+    return (col, row) => {
+      const t = state.world.tileAt(col, row);
+      if (!Units.canTraverse(Units.UNIT_TYPES[unit.type].domain, t.terrain)) return false;
+      // Can't pass through enemy units
+      if (state.units.some(u => u.col === col && u.row === row && u.owner !== unit.owner)) return false;
+      // Can't stop on friendly (we'll handle by not stepping)
+      if (state.units.some(u => u.col === col && u.row === row && u.owner === unit.owner && u.id !== unit.id)) return false;
+      return true;
+    };
+  }
+
+  // Plan one unit's turn: try to attack adjacent enemy, else move toward target.
+  function planUnit(state, unit, country, logs, mutators) {
+    if (unit.acted || unit.moves <= 0) return;
+    // 1) Attack adjacent enemy if any
+    const adj = HexMath.neighbors(unit.col, unit.row);
+    for (const n of adj) {
+      const target = enemyAt(state, country, n.col, n.row);
+      if (target) {
+        // Make sure unit can step onto that terrain (ground attacking ocean target = no)
+        const targetTile = state.world.tileAt(n.col, n.row);
+        if (!Units.canTraverse(Units.UNIT_TYPES[unit.type].domain, targetTile.terrain)) continue;
+        mutators.attack(unit, target);
+        return;
+      }
+    }
+    // 2) Move toward nearest enemy city, or unit if closer
+    const city = findNearestEnemyCity(state, country, unit.col, unit.row);
+    const enemy = findNearestEnemyUnit(state, country, unit.col, unit.row);
+    let target = city;
+    if (enemy) {
+      const dC = city ? HexMath.hexDistance(unit.col, unit.row, city.col, city.row) : Infinity;
+      const dU = HexMath.hexDistance(unit.col, unit.row, enemy.col, enemy.row);
+      if (dU < dC - 1) target = enemy;
+    }
+    if (!target) return;
+    // Find path
+    const path = HexMath.findPath(unit.col, unit.row, target.col, target.row, isPassableFor(state, unit));
+    if (!path || path.length === 0) {
+      // try to move to a random adjacent passable hex
+      const opts = adj.filter(n => isPassableFor(state, unit)(n.col, n.row));
+      if (opts.length) {
+        const dest = opts[Math.floor(Math.random() * opts.length)];
+        mutators.move(unit, dest.col, dest.row);
+      }
+      return;
+    }
+    // Step up to "moves" hexes along path, but if final step is target & has enemy, attack
+    let stepsTaken = 0;
+    while (stepsTaken < unit.moves && stepsTaken < path.length - 1) {
+      const next = path[stepsTaken];
+      if (!isPassableFor(state, unit)(next.col, next.row)) break;
+      mutators.move(unit, next.col, next.row);
+      stepsTaken++;
+      if (unit.moves <= 0) break;
+    }
+    // If next step on path is the target tile and an enemy occupies it, attack
+    if (stepsTaken < path.length && unit.moves > 0) {
+      const final = path[stepsTaken];
+      const target2 = enemyAt(state, country, final.col, final.row);
+      if (target2) {
+        const adjNow = HexMath.neighbors(unit.col, unit.row);
+        if (adjNow.some(a => a.col === final.col && a.row === final.row)) {
+          mutators.attack(unit, target2);
+        }
+      } else {
+        // Empty tile (maybe a city) — capture if it's a city we can take
+        const tile = state.world.tileAt(final.col, final.row);
+        if (tile.city && tile.city.owner !== country && Units.UNIT_TYPES[unit.type].domain === 'land') {
+          // step in to capture (only if adjacent)
+          const adjNow = HexMath.neighbors(unit.col, unit.row);
+          if (adjNow.some(a => a.col === final.col && a.row === final.row)) {
+            if (isPassableFor(state, unit)(final.col, final.row)) {
+              mutators.move(unit, final.col, final.row);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function runAITurn(state, country, mutators) {
+    const logs = [];
+    // Move/attack all units
+    const myUnits = state.units.filter(u => u.owner === country);
+    // Sort: tanks/inf first (they capture), arty/air later
+    myUnits.sort((a, b) => {
+      const order = { tank: 0, infantry: 1, artillery: 2, fighter: 3, bomber: 4, destroyer: 5, battleship: 6, submarine: 7 };
+      return (order[a.type] || 9) - (order[b.type] || 9);
+    });
+    for (const u of myUnits) {
+      planUnit(state, u, country, logs, mutators);
+    }
+    // Build at cities
+    const myCities = state.cities.filter(c => c.owner === country);
+    for (const c of myCities) {
+      // skip if already building
+      const queue = state.queues[country + ':' + c.col + ',' + c.row];
+      if (queue && queue.length) continue;
+      const pick = pickBuild(state, country, c);
+      if (pick) {
+        mutators.queueBuild(country, c, pick);
+      }
+    }
+    return logs;
+  }
+
+  window.runAITurn = runAITurn;
+})();
+
+</script>
+
+<script>
+// ===== i18n.js =====
+(function(){
+  const LANGS = [
+    { code: 'en', name: 'English',  flag: 'EN' },
+    { code: 'de', name: 'Deutsch',  flag: 'DE' },
+    { code: 'fr', name: 'Français', flag: 'FR' },
+    { code: 'es', name: 'Español',  flag: 'ES' },
+    { code: 'it', name: 'Italiano', flag: 'IT' },
+    { code: 'ru', name: 'Русский',  flag: 'RU' },
+    { code: 'ja', name: '日本語',     flag: 'JA' },
+    { code: 'zh', name: '中文',       flag: 'ZH' },
+  ];
+  const S = {
+    en: {
+      brand_kicker: 'COMMAND', turn: 'Turn', nation: 'Nation', gold: 'Gold', prod: 'Production',
+      cities: 'Cities', units: 'Units', end_turn: 'End Turn', ai_resolving: 'AI RESOLVING…',
+      banner_orders: 'COMMAND — ORDERS PENDING', banner_ai: 'RESOLVING ORDERS',
+      selected_unit: 'Selected Unit', city: 'City', terrain: 'Terrain', dispatches: 'Dispatches',
+      command_console: 'Command Console', console_hint: 'Click a unit or city. Drag to pan, scroll to zoom.',
+      build_queue: 'BUILD QUEUE', build: 'BUILD', move: 'Move', cancel_move: 'Cancel Move', disband: 'Disband',
+      atk: 'ATK', def: 'DEF', mv: 'MV', hp: 'HP', used: 'USED', state_: 'STATE',
+      done_: 'DONE', ready_: 'READY', moves: 'Moves', stealth: 'STEALTH',
+      type_lbl: 'Type', owner_lbl: 'Owner', coords: 'Coords', units_lbl: 'Units',
+      neutral: 'NEUTRAL', neutral_lc: 'Neutral', no_reports: '— No reports —',
+      your_territory: 'YOUR TERRITORY', foreign: 'FOREIGN',
+      ocean: 'Ocean', plain: 'Plains', hill: 'Hills', forest: 'Forest', mountain: 'Mountains',
+      kicker: 'CHOOSE YOUR THEATER · MAY 1939', title_a: 'FRONT', title_b: 'LINE',
+      sub: 'A war of attrition. Pick a power — the rest are at the front.',
+      doctrine: 'Doctrine', combined_arms: 'Combined Arms',
+      footer_hint: 'DRAG TO PAN · SCROLL TO ZOOM · END TURN TO ADVANCE',
+      victory: 'TOTAL VICTORY', defeat: 'DEFEAT',
+      victory_sub: 'All capitals fall under your banner.',
+      defeat_sub: 'Your capitals have been overrun.', new_campaign: 'New Campaign',
+      tt_hex: 'Hex', language: 'Language', ai_speed: 'AI Speed', at_sea: 'AT SEA',
+      speed_slow: 'Slow', speed_normal: 'Normal', speed_fast: 'Fast', speed_skip: 'Skip',
+      log_commence: 'Operations commence. You command {nation}.',
+      log_capture: '▸ {city} captured from {from}',
+      log_destroyed: '✕ {nation} {unit} destroyed',
+      log_queue: '▢ {nation} queues {unit} in {city}',
+      log_field: '✓ {nation} fields a {unit} at {city}',
+      u_infantry: 'Infantry', u_tank: 'Tank', u_artillery: 'Artillery',
+      u_fighter: 'Fighter', u_bomber: 'Bomber', u_destroyer: 'Destroyer',
+      u_battleship: 'Battleship', u_submarine: 'Submarine',
+    },
+    de: {
+      brand_kicker: 'KOMMANDO', turn: 'Runde', nation: 'Nation', gold: 'Gold', prod: 'Produktion',
+      cities: 'Städte', units: 'Einheiten', end_turn: 'Zug Beenden', ai_resolving: 'KI BERECHNET…',
+      banner_orders: 'KOMMANDO — BEFEHLE AUSSTEHEND', banner_ai: 'BEFEHLE WERDEN AUSGEFÜHRT',
+      selected_unit: 'Gewählte Einheit', city: 'Stadt', terrain: 'Gelände', dispatches: 'Meldungen',
+      command_console: 'Kommandozentrale', console_hint: 'Wähle eine Einheit oder Stadt. Ziehen zum Verschieben, Scrollen zum Zoomen.',
+      build_queue: 'BAUWARTESCHLANGE', build: 'BAUEN', move: 'Bewegen', cancel_move: 'Abbrechen', disband: 'Auflösen',
+      atk: 'ANG', def: 'VTG', mv: 'BW', hp: 'LP', used: 'GENUTZT', state_: 'STATUS',
+      done_: 'FERTIG', ready_: 'BEREIT', moves: 'Bewegung', stealth: 'TARNUNG',
+      type_lbl: 'Art', owner_lbl: 'Besitzer', coords: 'Koord.', units_lbl: 'Einheiten',
+      neutral: 'NEUTRAL', neutral_lc: 'Neutral', no_reports: '— Keine Meldungen —',
+      your_territory: 'EIGENES GEBIET', foreign: 'FREMD',
+      ocean: 'Ozean', plain: 'Ebene', hill: 'Hügel', forest: 'Wald', mountain: 'Gebirge',
+      kicker: 'WÄHLE DEIN KRIEGSGEBIET · MAI 1939', title_a: 'FRONT', title_b: 'LINIE',
+      sub: 'Ein Zermürbungskrieg. Wähle eine Macht — der Rest steht an der Front.',
+      doctrine: 'Doktrin', combined_arms: 'Verbundene Waffen',
+      footer_hint: 'ZIEHEN ZUM VERSCHIEBEN · SCROLLEN ZUM ZOOMEN · ZUG BEENDEN',
+      victory: 'TOTALER SIEG', defeat: 'NIEDERLAGE',
+      victory_sub: 'Alle Hauptstädte stehen unter deiner Fahne.',
+      defeat_sub: 'Deine Hauptstädte sind überrannt worden.', new_campaign: 'Neuer Feldzug',
+      tt_hex: 'Hex', language: 'Sprache', ai_speed: 'KI-Tempo', at_sea: 'AUF SEE',
+      speed_slow: 'Langsam', speed_normal: 'Normal', speed_fast: 'Schnell', speed_skip: 'Überspr.',
+      log_commence: 'Operationen beginnen. Du befehligst {nation}.',
+      log_capture: '▸ {city} von {from} erobert',
+      log_destroyed: '✕ {nation} {unit} vernichtet',
+      log_queue: '▢ {nation} bestellt {unit} in {city}',
+      log_field: '✓ {nation} stationiert {unit} in {city}',
+      u_infantry: 'Infanterie', u_tank: 'Panzer', u_artillery: 'Artillerie',
+      u_fighter: 'Jäger', u_bomber: 'Bomber', u_destroyer: 'Zerstörer',
+      u_battleship: 'Schlachtschiff', u_submarine: 'U-Boot',
+    },
+    fr: {
+      brand_kicker: 'COMMANDEMENT', turn: 'Tour', nation: 'Nation', gold: 'Or', prod: 'Production',
+      cities: 'Villes', units: 'Unités', end_turn: 'Fin du Tour', ai_resolving: 'IA EN COURS…',
+      banner_orders: 'COMMANDEMENT — ORDRES EN ATTENTE', banner_ai: 'EXÉCUTION DES ORDRES',
+      selected_unit: 'Unité Sélectionnée', city: 'Ville', terrain: 'Terrain', dispatches: 'Dépêches',
+      command_console: 'Poste de Commandement', console_hint: 'Cliquez sur une unité ou ville. Glisser pour déplacer, molette pour zoomer.',
+      build_queue: 'FILE DE CONSTRUCTION', build: 'CONSTRUIRE', move: 'Déplacer', cancel_move: 'Annuler', disband: 'Démanteler',
+      atk: 'ATQ', def: 'DEF', mv: 'MV', hp: 'PV', used: 'UTIL.', state_: 'ÉTAT',
+      done_: 'FAIT', ready_: 'PRÊT', moves: 'Mouvements', stealth: 'FURTIF',
+      type_lbl: 'Type', owner_lbl: 'Propriétaire', coords: 'Coords', units_lbl: 'Unités',
+      neutral: 'NEUTRE', neutral_lc: 'Neutre', no_reports: '— Aucun rapport —',
+      your_territory: 'VOTRE TERRITOIRE', foreign: 'ÉTRANGER',
+      ocean: 'Océan', plain: 'Plaines', hill: 'Collines', forest: 'Forêt', mountain: 'Montagnes',
+      kicker: 'CHOISISSEZ VOTRE THÉÂTRE · MAI 1939', title_a: 'FRONT', title_b: 'LINE',
+      sub: 'Une guerre d\'usure. Choisissez une puissance — le reste est au front.',
+      doctrine: 'Doctrine', combined_arms: 'Armes Combinées',
+      footer_hint: 'GLISSER · MOLETTE POUR ZOOMER · FIN DU TOUR',
+      victory: 'VICTOIRE TOTALE', defeat: 'DÉFAITE',
+      victory_sub: 'Toutes les capitales tombent sous votre bannière.',
+      defeat_sub: 'Vos capitales ont été conquises.', new_campaign: 'Nouvelle Campagne',
+      tt_hex: 'Hex', language: 'Langue', ai_speed: 'Vitesse IA', at_sea: 'EN MER',
+      speed_slow: 'Lent', speed_normal: 'Normal', speed_fast: 'Rapide', speed_skip: 'Passer',
+      log_commence: 'Opérations en cours. Vous commandez {nation}.',
+      log_capture: '▸ {city} capturée de {from}',
+      log_destroyed: '✕ {nation} {unit} détruite',
+      log_queue: '▢ {nation} commande {unit} à {city}',
+      log_field: '✓ {nation} déploie {unit} à {city}',
+      u_infantry: 'Infanterie', u_tank: 'Char', u_artillery: 'Artillerie',
+      u_fighter: 'Chasseur', u_bomber: 'Bombardier', u_destroyer: 'Destroyer',
+      u_battleship: 'Cuirassé', u_submarine: 'Sous-marin',
+    },
+    es: {
+      brand_kicker: 'MANDO', turn: 'Turno', nation: 'Nación', gold: 'Oro', prod: 'Producción',
+      cities: 'Ciudades', units: 'Unidades', end_turn: 'Fin del Turno', ai_resolving: 'IA RESOLVIENDO…',
+      banner_orders: 'MANDO — ÓRDENES PENDIENTES', banner_ai: 'RESOLVIENDO ÓRDENES',
+      selected_unit: 'Unidad Seleccionada', city: 'Ciudad', terrain: 'Terreno', dispatches: 'Despachos',
+      command_console: 'Puesto de Mando', console_hint: 'Pulsa una unidad o ciudad. Arrastra para mover, rueda para zoom.',
+      build_queue: 'COLA DE CONSTRUCCIÓN', build: 'CONSTRUIR', move: 'Mover', cancel_move: 'Cancelar', disband: 'Disolver',
+      atk: 'ATQ', def: 'DEF', mv: 'MV', hp: 'PV', used: 'USAD.', state_: 'ESTADO',
+      done_: 'LISTO', ready_: 'LISTA', moves: 'Movimientos', stealth: 'SIGILO',
+      type_lbl: 'Tipo', owner_lbl: 'Dueño', coords: 'Coord.', units_lbl: 'Unidades',
+      neutral: 'NEUTRAL', neutral_lc: 'Neutral', no_reports: '— Sin informes —',
+      your_territory: 'TU TERRITORIO', foreign: 'EXTRANJERO',
+      ocean: 'Océano', plain: 'Llanura', hill: 'Colinas', forest: 'Bosque', mountain: 'Montañas',
+      kicker: 'ELIGE TU TEATRO · MAYO 1939', title_a: 'FRENTE', title_b: 'LÍNEA',
+      sub: 'Una guerra de desgaste. Elige una potencia — el resto va al frente.',
+      doctrine: 'Doctrina', combined_arms: 'Armas Combinadas',
+      footer_hint: 'ARRASTRA · RUEDA PARA ZOOM · FIN DEL TURNO',
+      victory: 'VICTORIA TOTAL', defeat: 'DERROTA',
+      victory_sub: 'Todas las capitales caen bajo tu bandera.',
+      defeat_sub: 'Tus capitales han sido tomadas.', new_campaign: 'Nueva Campaña',
+      tt_hex: 'Hex', language: 'Idioma', ai_speed: 'Veloc. IA', at_sea: 'EN EL MAR',
+      speed_slow: 'Lento', speed_normal: 'Normal', speed_fast: 'Rápido', speed_skip: 'Saltar',
+      log_commence: 'Operaciones comienzan. Comandas {nation}.',
+      log_capture: '▸ {city} capturada de {from}',
+      log_destroyed: '✕ {nation} {unit} destruido',
+      log_queue: '▢ {nation} encola {unit} en {city}',
+      log_field: '✓ {nation} despliega {unit} en {city}',
+      u_infantry: 'Infantería', u_tank: 'Tanque', u_artillery: 'Artillería',
+      u_fighter: 'Caza', u_bomber: 'Bombardero', u_destroyer: 'Destructor',
+      u_battleship: 'Acorazado', u_submarine: 'Submarino',
+    },
+    it: {
+      brand_kicker: 'COMANDO', turn: 'Turno', nation: 'Nazione', gold: 'Oro', prod: 'Produzione',
+      cities: 'Città', units: 'Unità', end_turn: 'Fine Turno', ai_resolving: 'IA IN AZIONE…',
+      banner_orders: 'COMANDO — ORDINI IN ATTESA', banner_ai: 'ESECUZIONE ORDINI',
+      selected_unit: 'Unità Selezionata', city: 'Città', terrain: 'Terreno', dispatches: 'Dispacci',
+      command_console: 'Comando', console_hint: 'Clicca un\'unità o città. Trascina per muovere, rotella per zoom.',
+      build_queue: 'CODA DI COSTRUZIONE', build: 'COSTRUISCI', move: 'Muovi', cancel_move: 'Annulla', disband: 'Scioglie',
+      atk: 'ATT', def: 'DIF', mv: 'MV', hp: 'PV', used: 'USATI', state_: 'STATO',
+      done_: 'FATTO', ready_: 'PRONTO', moves: 'Movimenti', stealth: 'INVISIB.',
+      type_lbl: 'Tipo', owner_lbl: 'Proprietario', coords: 'Coord.', units_lbl: 'Unità',
+      neutral: 'NEUTRALE', neutral_lc: 'Neutrale', no_reports: '— Nessun rapporto —',
+      your_territory: 'TUO TERRITORIO', foreign: 'STRANIERO',
+      ocean: 'Oceano', plain: 'Pianure', hill: 'Colline', forest: 'Foresta', mountain: 'Montagne',
+      kicker: 'SCEGLI IL TEATRO · MAGGIO 1939', title_a: 'FRONT', title_b: 'LINE',
+      sub: 'Una guerra di logoramento. Scegli una potenza — il resto è al fronte.',
+      doctrine: 'Dottrina', combined_arms: 'Armi Combinate',
+      footer_hint: 'TRASCINA · ROTELLA PER ZOOM · FINE TURNO',
+      victory: 'VITTORIA TOTALE', defeat: 'SCONFITTA',
+      victory_sub: 'Tutte le capitali cadono sotto la tua bandiera.',
+      defeat_sub: 'Le tue capitali sono state invase.', new_campaign: 'Nuova Campagna',
+      tt_hex: 'Hex', language: 'Lingua', ai_speed: 'Veloc. IA', at_sea: 'IN MARE',
+      speed_slow: 'Lenta', speed_normal: 'Normale', speed_fast: 'Veloce', speed_skip: 'Salta',
+      log_commence: 'Operazioni avviate. Comandi {nation}.',
+      log_capture: '▸ {city} catturata da {from}',
+      log_destroyed: '✕ {nation} {unit} distrutta',
+      log_queue: '▢ {nation} accoda {unit} a {city}',
+      log_field: '✓ {nation} schiera {unit} a {city}',
+      u_infantry: 'Fanteria', u_tank: 'Carro', u_artillery: 'Artiglieria',
+      u_fighter: 'Caccia', u_bomber: 'Bombardiere', u_destroyer: 'Cacciatorp.',
+      u_battleship: 'Corazzata', u_submarine: 'Sommergibile',
+    },
+    ru: {
+      brand_kicker: 'ШТАБ', turn: 'Ход', nation: 'Держава', gold: 'Золото', prod: 'Произв.',
+      cities: 'Города', units: 'Войска', end_turn: 'Конец Хода', ai_resolving: 'ИИ ХОДИТ…',
+      banner_orders: 'ШТАБ — ОЖИДАЮТСЯ ПРИКАЗЫ', banner_ai: 'ИСПОЛНЕНИЕ ПРИКАЗОВ',
+      selected_unit: 'Выбранный Юнит', city: 'Город', terrain: 'Местность', dispatches: 'Донесения',
+      command_console: 'Штаб', console_hint: 'Нажми на юнит или город. Тащи карту, прокрути для масштаба.',
+      build_queue: 'ОЧЕРЕДЬ', build: 'СТРОИТЬ', move: 'Идти', cancel_move: 'Отмена', disband: 'Распустить',
+      atk: 'АТК', def: 'ЗАЩ', mv: 'ХОД', hp: 'ЗД', used: 'ИСП.', state_: 'СТАТУС',
+      done_: 'ГОТОВ', ready_: 'ЖДЁТ', moves: 'Ход.', stealth: 'СКРЫТН.',
+      type_lbl: 'Тип', owner_lbl: 'Владелец', coords: 'Коорд.', units_lbl: 'Войска',
+      neutral: 'НЕЙТРАЛ', neutral_lc: 'Нейтрал.', no_reports: '— Нет донесений —',
+      your_territory: 'ВАША ТЕРРИТОРИЯ', foreign: 'ЧУЖАЯ',
+      ocean: 'Океан', plain: 'Равнины', hill: 'Холмы', forest: 'Лес', mountain: 'Горы',
+      kicker: 'ВЫБЕРИ ТЕАТР · МАЙ 1939', title_a: 'ФРОНТ', title_b: 'ЛИНИЯ',
+      sub: 'Война на истощение. Выбери державу — остальные уже на фронте.',
+      doctrine: 'Доктрина', combined_arms: 'Общевойсковая',
+      footer_hint: 'ТАЩИ · КОЛЁСИКО ДЛЯ МАСШТАБА · КОНЕЦ ХОДА',
+      victory: 'ПОЛНАЯ ПОБЕДА', defeat: 'ПОРАЖЕНИЕ',
+      victory_sub: 'Все столицы под твоим знаменем.',
+      defeat_sub: 'Твои столицы пали.', new_campaign: 'Новая Кампания',
+      tt_hex: 'Гекс', language: 'Язык', ai_speed: 'Скор. ИИ', at_sea: 'В МОРЕ',
+      speed_slow: 'Медл.', speed_normal: 'Норма', speed_fast: 'Быстро', speed_skip: 'Пропуск',
+      log_commence: 'Операции начаты. Ты ведёшь {nation}.',
+      log_capture: '▸ {city} захвачен у {from}',
+      log_destroyed: '✕ {nation} {unit} уничтожен',
+      log_queue: '▢ {nation} заказывает {unit} в {city}',
+      log_field: '✓ {nation} формирует {unit} в {city}',
+      u_infantry: 'Пехота', u_tank: 'Танк', u_artillery: 'Артиллерия',
+      u_fighter: 'Истребитель', u_bomber: 'Бомбардир.', u_destroyer: 'Эсминец',
+      u_battleship: 'Линкор', u_submarine: 'Подлодка',
+    },
+    ja: {
+      brand_kicker: '司令部', turn: 'ターン', nation: '国家', gold: '資金', prod: '生産',
+      cities: '都市', units: '部隊', end_turn: 'ターン終了', ai_resolving: 'AI処理中…',
+      banner_orders: '司令部 — 命令待機中', banner_ai: '命令を解決中',
+      selected_unit: '選択中の部隊', city: '都市', terrain: '地形', dispatches: '報告',
+      command_console: '司令コンソール', console_hint: '部隊または都市をクリック。ドラッグで移動、ホイールで拡大。',
+      build_queue: '建造キュー', build: '建造', move: '移動', cancel_move: '取消', disband: '解散',
+      atk: '攻', def: '防', mv: '機動', hp: 'HP', used: '使用', state_: '状態',
+      done_: '完了', ready_: '待機', moves: '機動力', stealth: 'ステルス',
+      type_lbl: '種類', owner_lbl: '所有', coords: '座標', units_lbl: '部隊',
+      neutral: '中立', neutral_lc: '中立', no_reports: '— 報告なし —',
+      your_territory: '自国領', foreign: '外国',
+      ocean: '海洋', plain: '平原', hill: '丘陵', forest: '森林', mountain: '山岳',
+      kicker: '戦域を選択 · 1939年5月', title_a: 'FRONT', title_b: 'LINE',
+      sub: '消耗戦。一国を選べ — 他はすでに前線にある。',
+      doctrine: '戦術', combined_arms: '諸兵連合',
+      footer_hint: 'ドラッグで移動 · ホイールで拡大 · ターン終了',
+      victory: '完全勝利', defeat: '敗北',
+      victory_sub: '全ての首都が貴官の旗の下に。',
+      defeat_sub: '首都が陥落した。', new_campaign: '新作戦',
+      tt_hex: 'Hex', language: '言語', ai_speed: 'AI速度', at_sea: '航行中',
+      speed_slow: '遅い', speed_normal: '普通', speed_fast: '速い', speed_skip: '省略',
+      log_commence: '作戦開始。貴官は{nation}を指揮する。',
+      log_capture: '▸ {city}を{from}から奪取',
+      log_destroyed: '✕ {nation}の{unit}を撃破',
+      log_queue: '▢ {nation}が{city}で{unit}を発注',
+      log_field: '✓ {nation}が{city}に{unit}を配備',
+      u_infantry: '歩兵', u_tank: '戦車', u_artillery: '砲兵',
+      u_fighter: '戦闘機', u_bomber: '爆撃機', u_destroyer: '駆逐艦',
+      u_battleship: '戦艦', u_submarine: '潜水艦',
+    },
+    zh: {
+      brand_kicker: '司令部', turn: '回合', nation: '国家', gold: '金币', prod: '产能',
+      cities: '城市', units: '部队', end_turn: '结束回合', ai_resolving: 'AI 思考中…',
+      banner_orders: '司令部 — 等待指令', banner_ai: '执行命令中',
+      selected_unit: '选中单位', city: '城市', terrain: '地形', dispatches: '战报',
+      command_console: '指挥控制台', console_hint: '点击单位或城市。拖动平移，滚轮缩放。',
+      build_queue: '建造队列', build: '建造', move: '移动', cancel_move: '取消', disband: '解散',
+      atk: '攻', def: '防', mv: '移', hp: '生', used: '已用', state_: '状态',
+      done_: '完毕', ready_: '待命', moves: '移动', stealth: '隐形',
+      type_lbl: '类型', owner_lbl: '归属', coords: '坐标', units_lbl: '单位',
+      neutral: '中立', neutral_lc: '中立', no_reports: '— 暂无战报 —',
+      your_territory: '我方领土', foreign: '外国',
+      ocean: '海洋', plain: '平原', hill: '丘陵', forest: '森林', mountain: '山地',
+      kicker: '选择战区 · 1939年5月', title_a: 'FRONT', title_b: 'LINE',
+      sub: '一场消耗战。选择一个强国 — 余者已在前线。',
+      doctrine: '战术', combined_arms: '诸兵种合成',
+      footer_hint: '拖动 · 滚轮缩放 · 结束回合',
+      victory: '全面胜利', defeat: '失败',
+      victory_sub: '所有首都皆在你的旗帜下。',
+      defeat_sub: '你的首都已被攻陷。', new_campaign: '新战役',
+      tt_hex: '格', language: '语言', ai_speed: 'AI 速度', at_sea: '海上',
+      speed_slow: '慢', speed_normal: '正常', speed_fast: '快', speed_skip: '跳过',
+      log_commence: '作战开始。你统率{nation}。',
+      log_capture: '▸ {city} 被从 {from} 攻陷',
+      log_destroyed: '✕ {nation} {unit} 被摧毁',
+      log_queue: '▢ {nation} 在 {city} 排产 {unit}',
+      log_field: '✓ {nation} 于 {city} 部署 {unit}',
+      u_infantry: '步兵', u_tank: '坦克', u_artillery: '炮兵',
+      u_fighter: '战斗机', u_bomber: '轰炸机', u_destroyer: '驱逐舰',
+      u_battleship: '战列舰', u_submarine: '潜艇',
+    },
+  };
+  let current = (navigator.language || 'en').slice(0,2);
+  if (!S[current]) current = 'en';
+  const listeners = new Set();
+  function t(key, vars) {
+    let s = (S[current] && S[current][key]) || S.en[key] || key;
+    if (vars) for (const k in vars) s = s.split('{'+k+'}').join(vars[k]);
+    return s;
+  }
+  window.I18N = {
+    LANGS, get current() { return current; },
+    set(c) { if (S[c]) { current = c; listeners.forEach(fn => fn(c)); } },
+    onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+    t,
+    unitName(type) { return t('u_' + type); },
+    terrainName(terrain) { return t(terrain); },
+  };
+})();
+</script>
+
+<script type="text/babel" data-presets="react">
+// === HexMap.jsx ===
+// HexMap.jsx — SVG hex grid renderer with horizontal wrap, unit & city overlays.
+
+const { useState, useRef, useEffect, useMemo, useCallback } = React;
+
+const TERRAIN_FILL = {
+  ocean:    '#0d1d2e',
+  plain:    '#bda77c',
+  hill:     '#a89066',
+  forest:   '#8c9c6e',
+  mountain: '#7a6a52',
+};
+const TERRAIN_LABEL = {
+  ocean:    'Ocean',
+  plain:    'Plains',
+  hill:     'Hills',
+  forest:   'Forest',
+  mountain: 'Mountains',
+};
+
+function colorWithAlpha(hex, a) {
+  // hex like '#rrggbb'
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// Tiny SVG glyphs for unit types — drawn in a viewBox '-10 -10 20 20' scaled to size.
+function UnitGlyph({ type, size = 14, color = '#fff' }) {
+  const s = size;
+  const cmn = { fill: 'none', stroke: color, strokeWidth: 1.7, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  // each returns a <g>
+  switch (type) {
+    case 'infantry':
+      return (
+        <g {...cmn}>
+          <rect x="-6" y="-5" width="12" height="10" />
+          <line x1="-6" y1="-5" x2="6" y2="5" />
+          <line x1="6" y1="-5" x2="-6" y2="5" />
+        </g>
+      );
+    case 'tank':
+      return (
+        <g {...cmn}>
+          <rect x="-7" y="-4" width="14" height="7" />
+          <rect x="-3" y="-7" width="6" height="3" />
+          <line x1="3" y1="-5.5" x2="9" y2="-5.5" />
+        </g>
+      );
+    case 'artillery':
+      return (
+        <g {...cmn}>
+          <circle cx="0" cy="2" r="3" />
+          <line x1="-1" y1="0" x2="-8" y2="-7" />
+          <line x1="-3" y1="5" x2="-7" y2="5" />
+          <line x1="3" y1="5" x2="7" y2="5" />
+        </g>
+      );
+    case 'fighter':
+      return (
+        <g {...cmn}>
+          <line x1="0" y1="-7" x2="0" y2="7" />
+          <line x1="-7" y1="0" x2="7" y2="0" />
+          <line x1="-3" y1="5" x2="3" y2="5" />
+        </g>
+      );
+    case 'bomber':
+      return (
+        <g {...cmn}>
+          <line x1="-9" y1="0" x2="9" y2="0" />
+          <line x1="-9" y1="-2" x2="-9" y2="2" />
+          <line x1="9" y1="-2" x2="9" y2="2" />
+          <line x1="0" y1="-5" x2="0" y2="5" />
+          <circle cx="0" cy="0" r="1.5" fill={color} />
+        </g>
+      );
+    case 'destroyer':
+      return (
+        <g {...cmn}>
+          <path d="M -8 2 L 8 2 L 6 5 L -6 5 Z" />
+          <line x1="-4" y1="-1" x2="-4" y2="2" />
+          <line x1="0" y1="-3" x2="0" y2="2" />
+          <line x1="4" y1="-1" x2="4" y2="2" />
+        </g>
+      );
+    case 'battleship':
+      return (
+        <g {...cmn}>
+          <path d="M -9 1 L 9 1 L 7 5 L -7 5 Z" />
+          <rect x="-2" y="-5" width="4" height="6" />
+          <line x1="-6" y1="-2" x2="-6" y2="1" />
+          <line x1="6" y1="-2" x2="6" y2="1" />
+        </g>
+      );
+    case 'submarine':
+      return (
+        <g {...cmn}>
+          <path d="M -8 0 a 8 4 0 1 1 16 0 a 8 4 0 1 1 -16 0" />
+          <rect x="-1.5" y="-5" width="3" height="3" />
+          <line x1="0" y1="-2" x2="0" y2="-4" />
+        </g>
+      );
+    default:
+      return null;
+  }
+}
+
+// Lean hex polygon — single polygon per tile, no per-tile <g> wrapper.
+// Country tint and terrain are baked into the fill server-side.
+function blendColor(base, tint, t) {
+  const b = parseInt(base.slice(1), 16);
+  const k = parseInt(tint.slice(1), 16);
+  const br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+  const kr = (k >> 16) & 255, kg = (k >> 8) & 255, kb = k & 255;
+  const r = Math.round(br * (1 - t) + kr * t);
+  const g = Math.round(bg * (1 - t) + kg * t);
+  const bl = Math.round(bb * (1 - t) + kb * t);
+  return '#' + ((r << 16) | (g << 8) | bl).toString(16).padStart(6, '0');
+}
+
+const HEX_PATH_CACHE = new Map();
+function cachedHexPoints(size) {
+  if (HEX_PATH_CACHE.has(size)) return HEX_PATH_CACHE.get(size);
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i;
+    pts.push([size * Math.cos(a), size * Math.sin(a)]);
+  }
+  const s = pts.map(p => p.join(',')).join(' ');
+  HEX_PATH_CACHE.set(size, s);
+  return s;
+}
+
+function HexLite({ x, y, fill, stroke, strokeWidth, onClick, onMouseEnter, onMouseLeave, isOcean }) {
+  const { HEX_SIZE } = window.HexMath;
+  return (
+    <polygon
+      transform={`translate(${x},${y})`}
+      points={cachedHexPoints(HEX_SIZE)}
+      fill={fill}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      style={{ cursor: isOcean ? 'default' : 'pointer' }}
+    />
+  );
+}
+
+function CityMarker({ tile, country }) {
+  const { hexToPixel } = window.HexMath;
+  const { x, y } = hexToPixel(tile.col, tile.row);
+  const color = country ? country.color : '#888';
+  return (
+    <g transform={`translate(${x},${y})`} pointerEvents="none">
+      <circle cx="0" cy="0" r="6" fill="#0b1118" stroke={color} strokeWidth="1.4" />
+      <circle cx="0" cy="0" r="2.4" fill={color} />
+      <g transform="translate(0, 11)">
+        <rect x="-22" y="-5" width="44" height="9" fill="rgba(11,17,24,0.88)" stroke={color} strokeWidth="0.5" />
+        <text x="0" y="1.4" textAnchor="middle" fontFamily="'IBM Plex Mono', monospace" fontSize="6"
+              fill="#e5ecf5" letterSpacing="0.06em">{tile.city.name.toUpperCase()}</text>
+      </g>
+    </g>
+  );
+}
+
+function UnitMarker({ unit, country, selected, atSea }) {
+  const { hexToPixel } = window.HexMath;
+  const { x, y } = hexToPixel(unit.col, unit.row);
+  const color = country ? country.color : '#888';
+  const tint = country ? country.tint : '#333';
+  // Detect first mount vs subsequent: trigger deploy class once, then drop it.
+  const [appearing, setAppearing] = useState(true);
+  useEffect(() => {
+    const id = setTimeout(() => setAppearing(false), 500);
+    return () => clearTimeout(id);
+  }, []);
+  return (
+    <g
+      className={appearing ? 'unit-marker unit-deploy' : 'unit-marker'}
+      style={{
+        transform: `translate(${x}px, ${y}px)`,
+        transition: 'transform 0.55s cubic-bezier(0.4, 0.0, 0.2, 1)',
+        transformBox: 'fill-box',
+      }}
+      pointerEvents="none"
+    >
+      <ellipse cx="0" cy="6" rx="6" ry="1.5" fill="rgba(0,0,0,0.45)" />
+      {/* Embarked transport hull beneath the badge when land unit is on water */}
+      {atSea && (
+        <g pointerEvents="none">
+          <path d="M -9 4 L 9 4 L 7 7 L -7 7 Z" fill="#6da3e6" stroke="#0b1118" strokeWidth="0.6" />
+          <path d="M -10 7.4 q 5 -1 10 0 q 5 -1 10 0" stroke="rgba(255,255,255,0.4)" strokeWidth="0.5" fill="none" />
+        </g>
+      )}
+      <rect x="-7" y="-7" width="14" height="14" rx="2" fill={tint} stroke={color} strokeWidth={selected ? 1.8 : 1.0} />
+      <g transform="scale(0.65)">
+        <UnitGlyph type={unit.type} color="#fff" />
+      </g>
+      <g transform="translate(-7, 8)">
+        <rect width="14" height="2" fill="rgba(0,0,0,0.55)" />
+        <rect width={14 * (unit.hp / 100)} height="2" fill={unit.hp > 60 ? '#6abf7a' : unit.hp > 30 ? '#d9b26a' : '#d6533c'} />
+      </g>
+      {unit.acted && (
+        <circle cx="6" cy="-6" r="1.8" fill="#5f6f88" />
+      )}
+    </g>
+  );
+}
+
+function HexMap({ state, selectedUnitId, hoverHex, onHexClick, onHexHover, onPan, reachableSet, countriesById, viewport }) {
+  const { MAP_W, MAP_H, HEX_SIZE, hexToPixel } = window.HexMath;
+  const mapPixelWidth = MAP_W * HEX_SIZE * 1.5;
+  const mapPixelHeight = (MAP_H + 0.5) * HEX_SIZE * Math.sqrt(3);
+
+  const svgRef = useRef(null);
+  const [pan, setPan] = useState({ x: -mapPixelWidth * 0.05, y: 30 });
+  const [drag, setDrag] = useState(null);
+  const [scale, setScale] = useState(1);
+
+  // Compute scale to fit on first mount based on viewport size
+  useEffect(() => {
+    const el = svgRef.current?.parentElement;
+    if (!el) return;
+    const w = el.clientWidth, h = el.clientHeight;
+    const sX = w / mapPixelWidth;
+    const sY = h / mapPixelHeight;
+    const s = Math.min(sX, sY) * 0.98;
+    setScale(s);
+    setPan({ x: (w - mapPixelWidth * s) / 2, y: (h - mapPixelHeight * s) / 2 });
+  }, [viewport.w, viewport.h]);
+
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    setDrag({ x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y, moved: false });
+  };
+  const handleMouseMove = (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 4) {
+      setDrag({ ...drag, moved: true });
+      setPan({ x: drag.panX + dx, y: drag.panY + dy });
+    }
+  };
+  const handleMouseUp = () => setDrag(null);
+  const handleWheel = (e) => {
+    e.preventDefault();
+    const delta = -e.deltaY * 0.001;
+    const newScale = Math.max(0.35, Math.min(1.8, scale * (1 + delta)));
+    // zoom centered on cursor
+    const rect = svgRef.current.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+    const k = newScale / scale;
+    setPan({ x: cx - (cx - pan.x) * k, y: cy - (cy - pan.y) * k });
+    setScale(newScale);
+  };
+
+  // Wrap rendering: full map at offset 0; edge bands only at +/- mapPixelWidth.
+  // This keeps the wrap visible without paying for 3x DOM nodes.
+  const WRAP_EDGE = 6;
+  const baseTiles = state.world.tiles;
+  const edgeTiles = useMemo(() => baseTiles.filter(t => t.col < WRAP_EDGE || t.col >= MAP_W - WRAP_EDGE), [baseTiles]);
+  const edgeCities = useMemo(() => state.cities.filter(c => c.col < WRAP_EDGE || c.col >= MAP_W - WRAP_EDGE), [state.cities]);
+
+  const handleClickHex = (col, row, e) => {
+    if (drag && drag.moved) return;
+    onHexClick(col, row, e);
+  };
+
+  const renderTile = (tile, wc) => {
+    const { col, row, terrain } = tile;
+    const country = tile.owner ? countriesById[tile.owner] : null;
+    const { x, y } = hexToPixel(col, row);
+    const isReachable = reachableSet && reachableSet.has(tile.col + ',' + tile.row);
+    const isHover = hoverHex && hoverHex.col === tile.col && hoverHex.row === tile.row;
+    let fill = TERRAIN_FILL[terrain];
+    if (country && terrain !== 'ocean') {
+      fill = blendColor(fill, country.color, 0.22);
+    }
+    if (isReachable) {
+      fill = '#5dab9a';
+    } else if (isHover) {
+      fill = blendColor(fill, '#ffffff', 0.12);
+    }
+    return (
+      <polygon
+        key={`t-${wc}-${col}-${row}`}
+        transform={`translate(${x},${y})`}
+        points={cachedHexPoints(HEX_SIZE)}
+        fill={fill}
+        stroke="rgba(0,0,0,0.18)"
+        strokeWidth={0.35}
+        onClick={(e) => handleClickHex(col, row, e)}
+        onMouseEnter={() => onHexHover({ col, row })}
+        onMouseLeave={() => onHexHover(null)}
+        style={{ cursor: terrain === 'ocean' && !isReachable ? 'default' : 'pointer' }}
+      />
+    );
+  };
+
+  return (
+    <svg
+      ref={svgRef}
+      className={`map-svg ${drag && drag.moved ? 'dragging' : ''}`}
+      width="100%"
+      height="100%"
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onWheel={handleWheel}
+      style={{ background: 'radial-gradient(ellipse at center, #0d1827 0%, #06090f 100%)' }}
+    >
+      <defs>
+        <pattern id="ocean-pattern" width="40" height="40" patternUnits="userSpaceOnUse">
+          <rect width="40" height="40" fill="#0d1d2e" />
+          <path d="M 0 20 Q 10 16, 20 20 T 40 20" stroke="rgba(120,160,200,0.07)" fill="none" />
+          <path d="M 0 30 Q 10 26, 20 30 T 40 30" stroke="rgba(120,160,200,0.05)" fill="none" />
+        </pattern>
+      </defs>
+      <g transform={`translate(${pan.x}, ${pan.y}) scale(${scale})`}>
+        {/* Ocean backdrop spanning the wrap copies */}
+        <rect x={-mapPixelWidth - HEX_SIZE} y={-HEX_SIZE} width={mapPixelWidth * 3 + HEX_SIZE * 2} height={mapPixelHeight + HEX_SIZE * 2}
+              fill="url(#ocean-pattern)" />
+        {/* Main map (wc = 0) — full detail */}
+        <g>
+          {baseTiles.map(t => renderTile(t, 0))}
+          {state.cities.map(city => {
+            const tile = state.world.tileAt(city.col, city.row);
+            const country = countriesById[city.owner];
+            return <CityMarker key={`c-0-${city.col}-${city.row}`} tile={tile} country={country} />;
+          })}
+          {state.units.map(u => {
+            const country = countriesById[u.owner];
+            const selected = u.id === selectedUnitId;
+            return <UnitMarker key={`u-0-${u.id}`} unit={u} country={country} selected={selected} />;
+          })}
+        </g>
+        {/* Wrap copies — render only edge band to fake horizontal continuity */}
+        {[-1, 1].map(wc => (
+          <g key={wc} transform={`translate(${wc * mapPixelWidth}, 0)`}>
+            {edgeTiles.map(t => renderTile(t, wc))}
+            {edgeCities.map(city => {
+              const tile = state.world.tileAt(city.col, city.row);
+              const country = countriesById[city.owner];
+              return <CityMarker key={`c-${wc}-${city.col}-${city.row}`} tile={tile} country={country} />;
+            })}
+            {state.units
+              .filter(u => u.col < WRAP_EDGE || u.col >= MAP_W - WRAP_EDGE)
+              .map(u => {
+                const country = countriesById[u.owner];
+                const selected = u.id === selectedUnitId;
+                return <UnitMarker key={`u-${wc}-${u.id}`} unit={u} country={country} selected={selected} />;
+              })}
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+window.HexMap = HexMap;
+window.UnitGlyph = UnitGlyph;
+window.TERRAIN_LABEL = TERRAIN_LABEL;
+
+
+// === Panels.jsx ===
+// Panels.jsx — Top bar, side panel, tooltip, country select.
+
+const TERRAIN_LABEL2 = window.TERRAIN_LABEL;
+const t = (...a) => window.I18N.t(...a);
+const uName = (type) => window.I18N.unitName(type);
+const terrName = (k) => window.I18N.terrainName(k);
+
+function useLang() {
+  const [, force] = useState(0);
+  useEffect(() => window.I18N.onChange(() => force(n => n + 1)), []);
+  return window.I18N.current;
+}
+
+function LangPicker({ inline }) {
+  const lang = useLang();
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+  useEffect(() => {
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+  const cur = window.I18N.LANGS.find(l => l.code === lang) || window.I18N.LANGS[0];
+  return (
+    <div className="dropdown" ref={ref}>
+      <button className="dd-trigger" onClick={() => setOpen(o => !o)}>
+        <span className="flag" style={{padding:'2px 5px', border:'1px solid var(--line)', fontSize:9, letterSpacing:'0.1em'}}>{cur.flag}</span>
+        <span style={{fontSize:11}}>{cur.name}</span>
+        <span className="chev">▾</span>
+      </button>
+      {open && (
+        <div className="dd-panel">
+          {window.I18N.LANGS.map(l => (
+            <button key={l.code} className={`dd-item ${l.code === lang ? 'active' : ''}`} onClick={() => { window.I18N.set(l.code); setOpen(false); }}>
+              <span className="flag">{l.flag}</span>
+              <span>{l.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SpeedPicker({ speed, onChange }) {
+  const lang = useLang();
+  const [open, setOpen] = useState(false);
+  const ref = useRef();
+  useEffect(() => {
+    const close = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
+  const opts = [
+    { code: 'slow',   label: t('speed_slow') },
+    { code: 'normal', label: t('speed_normal') },
+    { code: 'fast',   label: t('speed_fast') },
+    { code: 'skip',   label: t('speed_skip') },
+  ];
+  const cur = opts.find(o => o.code === speed) || opts[1];
+  return (
+    <div className="dropdown" ref={ref}>
+      <button className="dd-trigger" onClick={() => setOpen(o => !o)}>
+        <span className="lbl">{t('ai_speed')}</span>
+        <span style={{fontSize:11}}>{cur.label}</span>
+        <span className="chev">▾</span>
+      </button>
+      {open && (
+        <div className="dd-panel">
+          {opts.map(o => (
+            <button key={o.code} className={`dd-item ${o.code === speed ? 'active' : ''}`} onClick={() => { onChange(o.code); setOpen(false); }}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopBar({ turn, playerCountry, gold, prod, units, cities, onEndTurn, aiThinking, year, aiSpeed, setAiSpeed }) {
+  const _ = useLang();
+  return (
+    <div className="topbar">
+      <div className="brand"><span className="dot">●</span> FRONTLINE <span style={{opacity:0.4}}>// {t('brand_kicker')}</span></div>
+      <div className="sep" />
+      <div className="stat">
+        <div className="lbl">{t('turn')}</div>
+        <div className="val mono">{String(turn).padStart(3, '0')} <span style={{opacity:0.5}}>/ {year}</span></div>
+      </div>
+      <div className="sep" />
+      <div className="stat">
+        <div className="lbl">{t('nation')}</div>
+        <div className="val">
+          <span className="country-tag">
+            <span className="swatch" style={{ background: playerCountry.color }} />
+            {playerCountry.short}
+          </span>
+        </div>
+      </div>
+      <div className="sep" />
+      <div className="stat">
+        <div className="lbl">{t('gold')}</div>
+        <div className="val gold mono">{gold}</div>
+      </div>
+      <div className="stat">
+        <div className="lbl">{t('prod')}</div>
+        <div className="val prod mono">{prod}</div>
+      </div>
+      <div className="sep" />
+      <div className="stat">
+        <div className="lbl">{t('cities')}</div>
+        <div className="val mono">{cities}</div>
+      </div>
+      <div className="stat">
+        <div className="lbl">{t('units')}</div>
+        <div className="val mono">{units}</div>
+      </div>
+      <div className="spacer" />
+      {aiThinking && (
+        <div className="mono" style={{ color: 'var(--ink-mute)', fontSize: 11, letterSpacing: '0.18em' }}>
+          {t('ai_resolving')}
+        </div>
+      )}
+      <SpeedPicker speed={aiSpeed} onChange={setAiSpeed} />
+      <LangPicker />
+      <button className="btn-end" onClick={onEndTurn} disabled={aiThinking}>{t('end_turn')} ▸</button>
+    </div>
+  );
+}
+
+function UnitPanel({ unit, country, onMoveMode, onDisband, moveMode, isPlayerUnit, atSea }) {
+  const _ = useLang();
+  const T = window.Units.UNIT_TYPES[unit.type];
+  return (
+    <div className="panel-section">
+      <h3>{t('selected_unit')}</h3>
+      <div className="unit-card">
+        <div className="icon">
+          <svg width="28" height="28" viewBox="-14 -14 28 28">
+            <window.UnitGlyph type={unit.type} color={country.color} />
+          </svg>
+        </div>
+        <div>
+          <div className="name">{uName(unit.type)}</div>
+          <div className="meta">
+            {country.short} · {T.domain.toUpperCase()}{T.stealth ? ' · ' + t('stealth') : ''}
+            {atSea && <span style={{ marginLeft: 6, color: '#6da3e6' }}>· {t('at_sea')}</span>}
+          </div>
+        </div>
+      </div>
+      <div className="stats-grid">
+        <div className="stat-pill"><div className="k">{t('atk')}</div><div className="v atk">{T.attack}</div></div>
+        <div className="stat-pill"><div className="k">{t('def')}</div><div className="v def">{T.defense}</div></div>
+        <div className="stat-pill"><div className="k">{t('mv')}</div><div className="v mv">{T.range}</div></div>
+        <div className="stat-pill"><div className="k">{t('hp')}</div><div className="v">{unit.hp}</div></div>
+        <div className="stat-pill"><div className="k">{t('used')}</div><div className="v">{unit.maxMoves - unit.moves}</div></div>
+        <div className="stat-pill"><div className="k">{t('state_')}</div><div className="v" style={{fontSize: 11}}>{unit.acted ? t('done_') : t('ready_')}</div></div>
+      </div>
+      <div className="move-bar">
+        <span>{t('moves')}</span>
+        <div className="pips">
+          {Array.from({ length: unit.maxMoves }).map((_, i) => (
+            <div key={i} className={`pip ${i < unit.moves ? 'on' : ''}`} />
+          ))}
+        </div>
+        <span style={{ marginLeft: 'auto', color: 'var(--ink)' }}>{unit.moves} / {unit.maxMoves}</span>
+      </div>
+      {isPlayerUnit && (
+        <div className="actions">
+          <button className={moveMode ? 'primary' : ''} onClick={onMoveMode} disabled={unit.moves <= 0 || unit.acted}>
+            {moveMode ? t('cancel_move') : t('move')}
+          </button>
+          <button onClick={onDisband}>{t('disband')}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CityPanel({ city, country, queue, players, onBuild, isPlayerCity }) {
+  const _ = useLang();
+  const player = players[country.id];
+  return (
+    <div className="panel-section">
+      <h3>{t('city')}</h3>
+      <div className="city-head">
+        <span className="ring"><span className="star" /></span>
+        <div>
+          <div className="name">{city.name}</div>
+          <div className="owner">{country.short} · {isPlayerCity ? t('your_territory') : t('foreign')}</div>
+        </div>
+      </div>
+      {queue && queue.length > 0 && (
+        <div style={{ marginBottom: 10 }}>
+          <div className="meta mono" style={{ fontSize: 9, color: 'var(--ink-mute)', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 6 }}>{t('build_queue')}</div>
+          {queue.map((q, i) => {
+            return (
+              <div key={i} className="queue-row" style={{ marginBottom: 4 }}>
+                <span className="ic">
+                  <svg width="14" height="14" viewBox="-10 -10 20 20"><window.UnitGlyph type={q.type} color="var(--accent-2)" /></svg>
+                </span>
+                <span className="tt">{uName(q.type)}</span>
+                <span className="countdown">{q.remaining}T</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {isPlayerCity && (
+        <>
+          <div className="meta mono" style={{ fontSize: 9, color: 'var(--ink-mute)', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 6 }}>{t('build')}</div>
+          <div className="build-list">
+            {window.Units.UNIT_ORDER.map(type => {
+              const T = window.Units.UNIT_TYPES[type];
+              const canAfford = player.gold >= T.cost.gold && player.prod >= T.cost.prod;
+              return (
+                <button key={type} className="build-btn" disabled={!canAfford} onClick={() => onBuild(type)}>
+                  <span className="ic">
+                    <svg width="20" height="20" viewBox="-12 -12 24 24"><window.UnitGlyph type={type} color="currentColor" /></svg>
+                  </span>
+                  <span className="nm">{uName(type)}</span>
+                  <span className="cost">
+                    <span className="g">⟜ {T.cost.gold}</span>
+                    <span className="p">▲ {T.cost.prod}</span>
+                    <span style={{ color: 'var(--ink-mute)' }}>{T.buildTime}T</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function HexInfoPanel({ tile, country, units, countriesById }) {
+  const _ = useLang();
+  return (
+    <div className="panel-section">
+      <h3>{t('terrain')}</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div className="stat-pill"><div className="k">{t('type_lbl')}</div><div className="v" style={{ fontSize: 12 }}>{terrName(tile.terrain)}</div></div>
+        <div className="stat-pill"><div className="k">{t('owner_lbl')}</div><div className="v" style={{ fontSize: 12, color: country ? country.color : 'var(--ink-mute)' }}>{country ? country.short : t('neutral')}</div></div>
+        <div className="stat-pill"><div className="k">{t('coords')}</div><div className="v mono" style={{ fontSize: 11 }}>{tile.col},{tile.row}</div></div>
+        <div className="stat-pill"><div className="k">{t('units_lbl')}</div><div className="v" style={{ fontSize: 12 }}>{units.length}</div></div>
+      </div>
+    </div>
+  );
+}
+
+function LogPanel({ logs }) {
+  const _ = useLang();
+  return (
+    <div className="panel-section">
+      <h3>{t('dispatches')}</h3>
+      <div className="log-feed">
+        {logs.length === 0 && <div style={{ color: 'var(--ink-mute)', fontSize: 11, fontFamily: 'IBM Plex Mono, monospace' }}>{t('no_reports')}</div>}
+        {logs.slice(-40).map((l, i) => (
+          <div key={i} className={`log-row ${l.kind || ''}`}>
+            <span className="t">T{String(l.turn).padStart(3, '0')}</span>{l.text}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HexTooltip({ x, y, tile, country, units, countriesById }) {
+  const _ = useLang();
+  const T = tile;
+  return (
+    <div className="tooltip" style={{ left: x + 14, top: y + 14 }}>
+      <div className="row"><span className="k">{t('terrain')}</span><span className="v">{terrName(T.terrain)}</span></div>
+      <div className="row"><span className="k">{t('owner_lbl')}</span><span className="v" style={{ color: country ? country.color : '#aaa' }}>{country ? country.name : t('neutral_lc')}</span></div>
+      {T.city && (
+        <div className="row"><span className="k">{t('city')}</span><span className="v">{T.city.name}</span></div>
+      )}
+      {units.length > 0 && (
+        <>
+          <hr />
+          {units.map(u => {
+            const cu = countriesById[u.owner];
+            const ut = window.Units.UNIT_TYPES[u.type];
+            return (
+              <div key={u.id} className="row">
+                <span className="k" style={{ color: cu.color }}>{ut.short}</span>
+                <span className="v">{t('hp')} {u.hp} · {t('mv')} {u.moves}</span>
+              </div>
+            );
+          })}
+        </>
+      )}
+      <hr />
+      <div className="row"><span className="k">{t('tt_hex')}</span><span className="v">{T.col},{T.row}</span></div>
+    </div>
+  );
+}
+
+function CountrySelect({ countries, onPick }) {
+  const _ = useLang();
+  return (
+    <div className="select-shell">
+      <div style={{position:'absolute', top: 20, right: 20}}>
+        <LangPicker />
+      </div>
+      <div className="head">
+        <div className="kicker">{t('kicker')}</div>
+        <h1>{t('title_a')}<span className="accent">{t('title_b')}</span></h1>
+        <div className="sub">{t('sub')}</div>
+      </div>
+      <div className="country-grid">
+        {countries.map(c => (
+          <button key={c.id} className="country-card" onClick={() => onPick(c.id)}>
+            <div className="row">
+              <span className="swatch" style={{ background: c.color }} />
+              <div>
+                <div className="nm">{c.name}</div>
+                <div className="tag">{c.short}</div>
+              </div>
+            </div>
+            <div className="stats">
+              <span>{t('cities')} <b>{c.cities.length}</b></span>
+              <span>{t('doctrine')} <b>{c.doctrine || t('combined_arms')}</b></span>
+            </div>
+          </button>
+        ))}
+      </div>
+      <div className="footer-hint mono">{t('footer_hint')}</div>
+    </div>
+  );
+}
+
+function MiniMap({ state, countriesById, playerCountry }) {
+  const ref = useRef(null);
+  const { MAP_W, MAP_H } = window.HexMath;
+  const W = 180, H = 90;
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0a1828';
+    ctx.fillRect(0, 0, W, H);
+    const cellW = W / MAP_W;
+    const cellH = H / MAP_H;
+    for (const t of state.world.tiles) {
+      if (t.terrain === 'ocean') continue;
+      const c = t.owner ? countriesById[t.owner] : null;
+      ctx.fillStyle = c ? c.color : '#5a5039';
+      ctx.fillRect(t.col * cellW, t.row * cellH, cellW + 0.5, cellH + 0.5);
+    }
+    for (const city of state.cities) {
+      const c = countriesById[city.owner];
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(city.col * cellW - 0.5, city.row * cellH - 0.5, 2, 2);
+    }
+  }, [state.world.tiles, state.cities, countriesById]);
+  return (
+    <div className="minimap">
+      <div className="lbl">Theater</div>
+      <canvas ref={ref} width={W} height={H} />
+    </div>
+  );
+}
+
+Object.assign(window, {
+  TopBar, UnitPanel, CityPanel, HexInfoPanel, LogPanel, HexTooltip, CountrySelect, MiniMap
+});
+
+
+// === App.jsx ===
+// App.jsx — Top-level game state, turn loop, and view orchestration.
+
+const CITY_INCOME = { gold: 12, prod: 14 };
+const NEUTRAL_PRODUCTION_FALLOFF = 0.5;
+const START_GOLD = 60;
+const START_PROD = 60;
+
+function makeInitialState(playerId) {
+  const world = window.generateWorld();
+  const countries = window.WorldData.COUNTRIES;
+
+  const players = {};
+  for (const c of countries) {
+    players[c.id] = {
+      id: c.id,
+      gold: START_GOLD,
+      prod: START_PROD,
+      alive: true,
+    };
+  }
+
+  // Starting forces — historically flavored balance for May 1939.
+  // Strong industrial powers get more / better units. Smaller neutrals get less.
+  const STARTING_FORCES = {
+    UK:  ['infantry', 'infantry', 'destroyer', 'fighter'],
+    FRA: ['infantry', 'infantry', 'infantry', 'tank'],
+    ESP: ['infantry', 'infantry'],
+    GER: ['infantry', 'infantry', 'infantry', 'tank', 'tank', 'fighter'],
+    ITA: ['infantry', 'infantry', 'tank', 'destroyer'],
+    POL: ['infantry', 'infantry', 'tank'],
+    NRD: ['infantry', 'infantry'],
+    BLK: ['infantry', 'infantry'],
+    SOV: ['infantry', 'infantry', 'infantry', 'infantry', 'tank', 'tank', 'artillery'],
+  };
+
+  const units = [];
+
+  const isOccupied = (col, row) => units.some(u => u.col === col && u.row === row);
+  const tileFits = (tile, type) => {
+    if (!tile) return false;
+    const T = window.Units.UNIT_TYPES[type];
+    return window.Units.canTraverse(T.domain, tile.terrain);
+  };
+  const tryPlaceUnit = (country, type, col, row) => {
+    const tile = world.tileAt(col, row);
+    if (!tile || !tileFits(tile, type)) return false;
+    if (isOccupied(col, row)) return false;
+    units.push(window.Units.createUnit(type, country, col, row));
+    return true;
+  };
+
+  for (const c of countries) {
+    const forces = STARTING_FORCES[c.id] || ['infantry', 'infantry'];
+    // Distribute units: prefer placing one per city (capital first), then fall back
+    // to neighbors of the capital. Each force entry tries (city tile, then a ring of neighbors).
+    for (let i = 0; i < forces.length; i++) {
+      const type = forces[i];
+      const city = c.cities[i % c.cities.length];
+      const home = world.tileAt(city.col, city.row);
+      // Try the city tile first, then expanding rings of neighbors.
+      let placed = tryPlaceUnit(c.id, type, home.col, home.row);
+      if (!placed) {
+        const ring = window.HexMath.neighbors(home.col, home.row);
+        for (const n of ring) {
+          if (tryPlaceUnit(c.id, type, n.col, n.row)) { placed = true; break; }
+        }
+      }
+      if (!placed) {
+        // Last resort: scan a wider radius around the capital
+        const cap = c.cities[0];
+        outer: for (let r = 2; r <= 4; r++) {
+          for (let dc = -r; dc <= r; dc++) {
+            for (let dr = -r; dr <= r; dr++) {
+              if (Math.abs(dc) + Math.abs(dr) !== r) continue;
+              const nc = ((cap.col + dc) % window.HexMath.MAP_W + window.HexMath.MAP_W) % window.HexMath.MAP_W;
+              const nr = cap.row + dr;
+              if (tryPlaceUnit(c.id, type, nc, nr)) { placed = true; break outer; }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    turn: 1,
+    year: 1939,
+    world,
+    players,
+    units,
+    cities: [...world.cities],
+    queues: {}, // key: 'COUNTRY:col,row' -> array of {type, remaining}
+    logs: [],
+    playerId,
+    phase: 'player', // 'player' | 'ai'
+  };
+}
+
+function App() {
+  const [screen, setScreen] = useState('select');
+  const [playerId, setPlayerId] = useState(null);
+  const [state, setState] = useState(null);
+  const [selectedHex, setSelectedHex] = useState(null);
+  const [moveMode, setMoveMode] = useState(false);
+  const [hoverHex, setHoverHex] = useState(null);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const [aiThinking, setAiThinking] = useState(false);
+  const [aiSpeed, setAiSpeed] = useState('normal');
+  const [aiCountry, setAiCountry] = useState(null);
+  const [viewport, setViewport] = useState({ w: window.innerWidth, h: window.innerHeight });
+  const [endgame, setEndgame] = useState(null);
+  const [combatFx, setCombatFx] = useState([]); // {id, col, row, popup}
+  const _lang = useLang();
+
+  // Speed -> step delay (ms)
+  const SPEED_MS = { slow: 700, normal: 320, fast: 110, skip: 0 };
+  const stepMs = SPEED_MS[aiSpeed] ?? 320;
+
+  useEffect(() => {
+    const onResize = () => setViewport({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    const onMove = (e) => setTooltipPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener('mousemove', onMove);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('mousemove', onMove);
+    };
+  }, []);
+
+  const countriesById = useMemo(() => {
+    const map = {};
+    for (const c of window.WorldData.COUNTRIES) map[c.id] = c;
+    return map;
+  }, []);
+
+  const startGame = (id) => {
+    const s = makeInitialState(id);
+    s.logs.push({ turn: 1, kind: 'build', text: t('log_commence', { nation: countriesById[id].name }) });
+    setPlayerId(id);
+    setState(s);
+    setScreen('play');
+    setSelectedHex(null);
+    setMoveMode(false);
+    setEndgame(null);
+  };
+
+  // ----- Helpers -----
+  const log = (s, turn, text, kind) => {
+    s.logs.push({ turn, text, kind });
+  };
+
+  const isPassable = (s, unit) => (col, row) => {
+    const t = s.world.tileAt(col, row);
+    if (!window.Units.canTraverse(window.Units.UNIT_TYPES[unit.type].domain, t.terrain)) return false;
+    if (s.units.some(u => u.col === col && u.row === row && u.id !== unit.id)) return false;
+    return true;
+  };
+
+  // Compute reachable & attackable for a selected player unit
+  const reachData = useMemo(() => {
+    if (!state) return { reach: new Set(), attack: new Set() };
+    const sel = getSelectedUnit(state);
+    if (!sel || sel.owner !== state.playerId) return { reach: new Set(), attack: new Set() };
+    if (sel.acted) return { reach: new Set(), attack: new Set() };
+    const { reachable } = window.HexMath.reachable(sel.col, sel.row, sel.moves, isPassable(state, sel));
+    const reach = new Set(reachable.map(r => r.col + ',' + r.row));
+    // Attack disabled entirely when a land unit is on water
+    const selTile = state.world.tileAt(sel.col, sel.row);
+    if (!window.Units.canAttackFrom(sel, selTile)) return { reach, attack: new Set() };
+    // Attackable: enemies within attack range (1, or 2 for artillery/bomber)
+    const T = window.Units.UNIT_TYPES[sel.type];
+    const range = (sel.type === 'artillery' || sel.type === 'bomber') ? 2 : 1;
+    const attack = new Set();
+    for (const u of state.units) {
+      if (u.owner === sel.owner) continue;
+      const d = window.HexMath.hexDistance(sel.col, sel.row, u.col, u.row);
+      if (d <= range) attack.add(u.col + ',' + u.row);
+    }
+    // also allow attacking adjacent enemy cities even if no units (capture)
+    if (T.domain === 'land') {
+      for (const n of window.HexMath.neighbors(sel.col, sel.row)) {
+        const t = state.world.tileAt(n.col, n.row);
+        if (t.city && t.city.owner !== sel.owner) {
+          attack.add(n.col + ',' + n.row);
+        }
+      }
+    }
+    return { reach, attack };
+  }, [state, selectedHex, moveMode]);
+
+  function getSelectedUnit(s) {
+    if (!selectedHex) return null;
+    return s.units.find(u => u.col === selectedHex.col && u.row === selectedHex.row && u.owner === s.playerId)
+        || s.units.find(u => u.col === selectedHex.col && u.row === selectedHex.row);
+  }
+
+  const handleHexClick = (col, row, e) => {
+    if (!state) return;
+    const tile = state.world.tileAt(col, row);
+    const occupant = state.units.find(u => u.col === col && u.row === row);
+    const sel = getSelectedUnit(state);
+
+    // If player has a selected friendly unit & in move mode, attempt to move/attack
+    if (sel && sel.owner === state.playerId && (moveMode || true)) {
+      const keyHex = col + ',' + row;
+      // Attack?
+      if (reachData.attack.has(keyHex)) {
+        doPlayerAttack(sel, col, row);
+        return;
+      }
+      // Move?
+      if (reachData.reach.has(keyHex)) {
+        doPlayerMove(sel, col, row);
+        return;
+      }
+    }
+
+    // Otherwise, select this hex
+    setSelectedHex({ col, row });
+    setMoveMode(false);
+  };
+
+  function doPlayerMove(unit, col, row) {
+    setState(prev => {
+      const s = { ...prev, units: prev.units.map(u => ({ ...u })) };
+      const u = s.units.find(x => x.id === unit.id);
+      // BFS path so we use correct number of moves
+      const path = window.HexMath.findPath(u.col, u.row, col, row, isPassable(s, u));
+      const stepCount = path ? path.length : window.HexMath.hexDistance(u.col, u.row, col, row);
+      u.col = col;
+      u.row = row;
+      u.moves = Math.max(0, u.moves - stepCount);
+      // Capture city?
+      const tile = s.world.tileAt(col, row);
+      if (tile.city && tile.city.owner !== u.owner && window.Units.UNIT_TYPES[u.type].domain === 'land') {
+        const oldOwner = tile.city.owner;
+        tile.city.owner = u.owner;
+        const cityEntry = s.cities.find(c => c.col === col && c.row === row);
+        if (cityEntry) cityEntry.owner = u.owner;
+        log(s, s.turn, t('log_capture', { city: tile.city.name, from: countriesById[oldOwner].short }), 'capture');
+        // clear queue of old owner
+        delete s.queues[oldOwner + ':' + col + ',' + row];
+      }
+      return s;
+    });
+    setSelectedHex({ col, row });
+    setMoveMode(false);
+  }
+
+  function doPlayerAttack(unit, col, row) {
+    // Block attack if attacker is on water (land unit at sea)
+    const fromTile = state.world.tileAt(unit.col, unit.row);
+    if (!window.Units.canAttackFrom(unit, fromTile)) return;
+    setState(prev => {
+      const s = { ...prev, units: prev.units.map(u => ({ ...u })) };
+      const attacker = s.units.find(x => x.id === unit.id);
+      const defender = s.units.find(x => x.col === col && x.row === row && x.owner !== attacker.owner);
+      const targetTile = s.world.tileAt(col, row);
+      const T = window.Units.UNIT_TYPES[attacker.type];
+      const range = (attacker.type === 'artillery' || attacker.type === 'bomber') ? 2 : 1;
+      const d = window.HexMath.hexDistance(attacker.col, attacker.row, col, row);
+      if (d > range) return prev;
+
+      const ranged = (attacker.type === 'artillery' || attacker.type === 'bomber');
+      if (defender) {
+        const res = window.Units.resolveCombat(attacker, defender, !!targetTile.city);
+        defender.hp -= res.defenderHpLoss;
+        if (!ranged) attacker.hp -= res.attackerHpLoss;
+        const atkC = countriesById[attacker.owner], defC = countriesById[defender.owner];
+        log(s, s.turn,
+          `⚔ ${atkC.short} ${T.short} ⇒ ${defC.short} ${window.Units.UNIT_TYPES[defender.type].short} (−${res.defenderHpLoss}${!ranged ? ` / −${res.attackerHpLoss}` : ''})`,
+          'combat');
+        // Remove dead
+        if (defender.hp <= 0) {
+          s.units = s.units.filter(u => u.id !== defender.id);
+          log(s, s.turn, t('log_destroyed', { nation: defC.short, unit: uName(defender.type) }), 'combat');
+          // If melee attacker survives, move onto tile
+          if (!ranged && attacker.hp > 0 && T.domain === 'land' && targetTile.terrain !== 'ocean' && attacker.moves > 0) {
+            attacker.col = col;
+            attacker.row = row;
+            attacker.moves = Math.max(0, attacker.moves - 1);
+            // Capture if city
+            if (targetTile.city && targetTile.city.owner !== attacker.owner) {
+              const oldOwner = targetTile.city.owner;
+              targetTile.city.owner = attacker.owner;
+              const cityEntry = s.cities.find(c => c.col === col && c.row === row);
+              if (cityEntry) cityEntry.owner = attacker.owner;
+              log(s, s.turn, t('log_capture', { city: targetTile.city.name, from: countriesById[oldOwner].short }), 'capture');
+              delete s.queues[oldOwner + ':' + col + ',' + row];
+            }
+          }
+        }
+        if (attacker.hp <= 0) {
+          s.units = s.units.filter(u => u.id !== attacker.id);
+          log(s, s.turn, t('log_destroyed', { nation: atkC.short, unit: uName(attacker.type) }), 'combat');
+        } else {
+          attacker.acted = true;
+          attacker.moves = 0;
+        }
+      } else if (targetTile.city && targetTile.city.owner !== attacker.owner && T.domain === 'land' && d === 1) {
+        // Capture undefended adjacent city
+        attacker.col = col; attacker.row = row;
+        attacker.moves = Math.max(0, attacker.moves - 1);
+        const oldOwner = targetTile.city.owner;
+        targetTile.city.owner = attacker.owner;
+        const cityEntry = s.cities.find(c => c.col === col && c.row === row);
+        if (cityEntry) cityEntry.owner = attacker.owner;
+        log(s, s.turn, t('log_capture', { city: targetTile.city.name, from: countriesById[oldOwner].short }), 'capture');
+        delete s.queues[oldOwner + ':' + col + ',' + row];
+      }
+      return s;
+    });
+    setSelectedHex({ col, row });
+    setMoveMode(false);
+  }
+
+  function disbandUnit(unitId) {
+    setState(prev => ({ ...prev, units: prev.units.filter(u => u.id !== unitId) }));
+    setSelectedHex(null);
+  }
+
+  function queueBuild(s, countryId, city, type) {
+    const T = window.Units.UNIT_TYPES[type];
+    const p = s.players[countryId];
+    if (p.gold < T.cost.gold || p.prod < T.cost.prod) return false;
+    p.gold -= T.cost.gold;
+    p.prod -= T.cost.prod;
+    const key = countryId + ':' + city.col + ',' + city.row;
+    if (!s.queues[key]) s.queues[key] = [];
+    s.queues[key].push({ type, remaining: T.buildTime });
+    log(s, s.turn, t('log_queue', { nation: countriesById[countryId].short, unit: uName(type), city: city.name }), 'build');
+    return true;
+  }
+
+  function handleBuild(type) {
+    if (!selectedHex) return;
+    const tile = state.world.tileAt(selectedHex.col, selectedHex.row);
+    if (!tile.city || tile.city.owner !== state.playerId) return;
+    setState(prev => {
+      const s = { ...prev, players: { ...prev.players }, queues: { ...prev.queues } };
+      s.players[state.playerId] = { ...s.players[state.playerId] };
+      const cityEntry = s.cities.find(c => c.col === tile.col && c.row === tile.row);
+      queueBuild(s, state.playerId, cityEntry, type);
+      return s;
+    });
+  }
+
+  // ----- End turn / AI -----
+
+  function startRound(s) {
+    // 1) Income from cities
+    for (const city of s.cities) {
+      if (!city.owner) continue;
+      s.players[city.owner].gold += CITY_INCOME.gold;
+      s.players[city.owner].prod += CITY_INCOME.prod;
+    }
+    // 2) Advance build queues
+    for (const key of Object.keys(s.queues)) {
+      const q = s.queues[key];
+      if (!q || q.length === 0) continue;
+      const [countryId, coord] = key.split(':');
+      const [col, row] = coord.split(',').map(Number);
+      const city = s.cities.find(c => c.col === col && c.row === row);
+      // If city no longer owned by countryId, drop queue
+      if (!city || city.owner !== countryId) { delete s.queues[key]; continue; }
+      // Advance front
+      q[0].remaining -= 1;
+      if (q[0].remaining <= 0) {
+        // Spawn unit
+        const type = q.shift().type;
+        // pick a spawn hex: city tile if empty, else neighbor
+        const tile = s.world.tileAt(col, row);
+        const blocked = s.units.some(u => u.col === col && u.row === row);
+        let spawn = { col, row };
+        if (blocked) {
+          for (const n of window.HexMath.neighbors(col, row)) {
+            const nt = s.world.tileAt(n.col, n.row);
+            const T = window.Units.UNIT_TYPES[type];
+            if (!window.Units.canTraverse(T.domain, nt.terrain)) continue;
+            if (s.units.some(u => u.col === n.col && u.row === n.row)) continue;
+            spawn = n; break;
+          }
+        }
+        const newUnit = window.Units.createUnit(type, countryId, spawn.col, spawn.row);
+        s.units.push(newUnit);
+        log(s, s.turn, t('log_field', { nation: countriesById[countryId].short, unit: uName(type), city: city.name }), 'build');
+      }
+    }
+    // 3) Reset moves for all units
+    for (const u of s.units) {
+      u.moves = u.maxMoves;
+      u.acted = false;
+    }
+    // 4) HP regen for units in friendly cities
+    for (const u of s.units) {
+      const tile = s.world.tileAt(u.col, u.row);
+      if (tile.city && tile.city.owner === u.owner) {
+        u.hp = Math.min(100, u.hp + 25);
+      } else {
+        u.hp = Math.min(100, u.hp + 5);
+      }
+    }
+    // 5) Update alive status
+    for (const id of Object.keys(s.players)) {
+      const hasCities = s.cities.some(c => c.owner === id);
+      s.players[id].alive = hasCities;
+    }
+  }
+
+  function checkEndgame(s) {
+    const playerAlive = s.players[s.playerId].alive;
+    if (!playerAlive) return 'defeat';
+    // win = controlling all enemy capitals (city #0 of every country)
+    const capitals = window.WorldData.COUNTRIES.map(c => c.cities[0]);
+    const ownsAllCapitals = capitals.every(cap => {
+      const cityEntry = s.cities.find(c => c.name === cap.name);
+      return cityEntry && cityEntry.owner === s.playerId;
+    });
+    if (ownsAllCapitals) return 'victory';
+    return null;
+  }
+
+  function pushFx(kind, col, row, extra) {
+    const id = 'fx' + Math.random().toString(36).slice(2);
+    setCombatFx(arr => [...arr, { id, kind, col, row, ...extra }]);
+    setTimeout(() => setCombatFx(arr => arr.filter(x => x.id !== id)), 1300);
+  }
+
+  // Keep a ref to current state so async loops can read latest after a flush.
+  const stateRef = useRef(null);
+  useEffect(() => { stateRef.current = state; }, [state]);
+
+  function endTurn() {
+    if (aiThinking) return;
+    setAiThinking(true);
+    setSelectedHex(null);
+    setMoveMode(false);
+
+    const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+    (async () => {
+      const order = window.WorldData.COUNTRIES.map(c => c.id).filter(id => id !== state.playerId);
+      for (const cid of order) {
+        const cur = stateRef.current;
+        if (!cur || !cur.players[cid] || !cur.players[cid].alive) continue;
+        if (aiSpeed !== 'skip') {
+          setAiCountry(cid);
+          await delay(stepMs * 0.5);
+        }
+        await runAICountryAnimated(cid, stepMs);
+      }
+      setAiCountry(null);
+      // Advance round
+      setState(prev => {
+        const s = { ...prev };
+        s.turn = prev.turn + 1;
+        s.year = 1939 + Math.floor((s.turn - 1) / 4);
+        startRound(s);
+        return { ...s, units: [...s.units], cities: [...s.cities], queues: { ...s.queues }, players: { ...s.players }, logs: [...s.logs] };
+      });
+      setAiThinking(false);
+    })();
+  }
+
+  async function runAICountryAnimated(country, stepDelay) {
+    // Snapshot list of unit ids to act for this country at start
+    const initialUnits = stateRef.current.units.filter(u => u.owner === country)
+      .sort((a, b) => {
+        const order = { tank: 0, infantry: 1, artillery: 2, fighter: 3, bomber: 4, destroyer: 5, battleship: 6, submarine: 7 };
+        return (order[a.type] || 9) - (order[b.type] || 9);
+      })
+      .map(u => u.id);
+
+    const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+    for (const uid of initialUnits) {
+      // Each iteration: read fresh state
+      let steps = 0;
+      while (steps++ < 8) {
+        const cur = stateRef.current;
+        const live = cur.units.find(u => u.id === uid);
+        if (!live || live.acted || live.moves <= 0) break;
+        const action = planAIAction(cur, live, country);
+        if (!action) break;
+        if (action.type === 'attack') {
+          applyAttack(action.attackerId, action.defenderId, action.col, action.row);
+          pushFx('combat', action.col, action.row);
+          if (stepDelay > 0) await wait(stepDelay);
+          break;
+        } else if (action.type === 'moveStep') {
+          applyMoveStep(action.unitId, action.col, action.row);
+          if (stepDelay > 0) await wait(stepDelay * 0.55);
+        } else break;
+      }
+    }
+
+    // Build orders
+    setState(prev => {
+      const s = { ...prev, queues: { ...prev.queues }, players: { ...prev.players }, logs: [...prev.logs] };
+      s.players[country] = { ...s.players[country] };
+      const myCities = s.cities.filter(c => c.owner === country);
+      for (const c of myCities) {
+        const key = country + ':' + c.col + ',' + c.row;
+        if (s.queues[key] && s.queues[key].length) continue;
+        const pick = pickAIBuild(s, country);
+        if (pick) queueBuild(s, country, c, pick);
+      }
+      return s;
+    });
+    if (stepDelay > 0) await wait(stepDelay * 0.4);
+  }
+
+  function pickAIBuild(s, country) {
+    const owned = s.units.filter(u => u.owner === country);
+    const counts = {};
+    for (const u of owned) counts[u.type] = (counts[u.type] || 0) + 1;
+    const totalLand = (counts.infantry || 0) + (counts.tank || 0) + (counts.artillery || 0);
+    const totalAir = (counts.fighter || 0) + (counts.bomber || 0);
+    const preferences = [];
+    if (totalLand < 3) preferences.push('infantry', 'infantry', 'tank');
+    else if ((counts.infantry || 0) < (counts.tank || 0) * 2) preferences.push('infantry');
+    else if ((counts.tank || 0) < 3) preferences.push('tank', 'artillery');
+    else if (totalAir < 2) preferences.push('fighter', 'bomber');
+    else preferences.push('tank', 'infantry', 'artillery', 'fighter');
+    if (Math.random() < 0.18) preferences.unshift('destroyer');
+    for (const ty of preferences) {
+      const T = window.Units.UNIT_TYPES[ty];
+      const p = s.players[country];
+      if (p.gold >= T.cost.gold && p.prod >= T.cost.prod) return ty;
+    }
+    return null;
+  }
+
+  function planAIAction(s, unit, country) {
+    if (unit.acted || unit.moves <= 0) return null;
+    const myTile = s.world.tileAt(unit.col, unit.row);
+    const atSea = !window.Units.canAttackFrom(unit, myTile);
+    // 1) Attack adjacent — only if not at sea
+    if (!atSea) {
+      const adj = window.HexMath.neighbors(unit.col, unit.row);
+      for (const n of adj) {
+        const target = s.units.find(u => u.col === n.col && u.row === n.row && u.owner !== country);
+        if (target) {
+          const tt = s.world.tileAt(n.col, n.row);
+          // Sea units can only "attack" ocean tiles; land units can attack land tiles
+          if (window.Units.UNIT_TYPES[unit.type].domain === 'sea' && tt.terrain !== 'ocean') continue;
+          if (window.Units.UNIT_TYPES[unit.type].domain === 'land' && tt.terrain === 'ocean') continue;
+          return { type: 'attack', attackerId: unit.id, defenderId: target.id, col: n.col, row: n.row };
+        }
+      }
+    }
+    // 2) Step toward target
+    const findCity = () => {
+      let best = null, bestD = Infinity;
+      for (const c of s.cities) {
+        if (c.owner === country) continue;
+        const d = window.HexMath.hexDistance(unit.col, unit.row, c.col, c.row);
+        if (d < bestD) { bestD = d; best = c; }
+      }
+      return best;
+    };
+    const findEnemy = () => {
+      let best = null, bestD = Infinity;
+      for (const u of s.units) {
+        if (u.owner === country) continue;
+        const d = window.HexMath.hexDistance(unit.col, unit.row, u.col, u.row);
+        if (d < bestD) { bestD = d; best = u; }
+      }
+      return best;
+    };
+    const city = findCity();
+    const enemy = findEnemy();
+    let target = city;
+    if (enemy && city) {
+      const dC = window.HexMath.hexDistance(unit.col, unit.row, city.col, city.row);
+      const dU = window.HexMath.hexDistance(unit.col, unit.row, enemy.col, enemy.row);
+      if (dU < dC - 1) target = enemy;
+    } else if (enemy) target = enemy;
+    if (!target) return null;
+    const isPass = (col, row) => {
+      const tt = s.world.tileAt(col, row);
+      if (!window.Units.canTraverse(window.Units.UNIT_TYPES[unit.type].domain, tt.terrain)) return false;
+      if (s.units.some(u => u.col === col && u.row === row && u.id !== unit.id)) return false;
+      return true;
+    };
+    const path = window.HexMath.findPath(unit.col, unit.row, target.col, target.row, isPass);
+    if (!path || !path.length) return null;
+    const next = path[0];
+    if (!isPass(next.col, next.row)) {
+      // try to attack if next is target with enemy
+      const en = s.units.find(u => u.col === next.col && u.row === next.row && u.owner !== country);
+      if (en) return { type: 'attack', attackerId: unit.id, defenderId: en.id, col: next.col, row: next.row };
+      return null;
+    }
+    return { type: 'moveStep', unitId: unit.id, col: next.col, row: next.row };
+  }
+
+  function applyMoveStep(unitId, col, row) {
+    setState(prev => {
+      const s = { ...prev, units: prev.units.map(u => ({ ...u })), cities: [...prev.cities], queues: { ...prev.queues }, logs: [...prev.logs] };
+      const u = s.units.find(x => x.id === unitId);
+      if (!u) return prev;
+      u.col = col; u.row = row;
+      u.moves = Math.max(0, u.moves - 1);
+      const tile = s.world.tileAt(col, row);
+      if (tile.city && tile.city.owner !== u.owner && window.Units.UNIT_TYPES[u.type].domain === 'land') {
+        const oldOwner = tile.city.owner;
+        tile.city.owner = u.owner;
+        const cityEntry = s.cities.find(c => c.col === col && c.row === row);
+        if (cityEntry) cityEntry.owner = u.owner;
+        s.logs.push({ turn: s.turn, kind: 'capture', text: t('log_capture', { city: tile.city.name, from: countriesById[oldOwner].short }) });
+        delete s.queues[oldOwner + ':' + col + ',' + row];
+        pushFx('capture', col, row);
+      }
+      return s;
+    });
+  }
+
+  function applyAttack(attackerId, defenderId, col, row) {
+    setState(prev => {
+      const s = { ...prev, units: prev.units.map(u => ({ ...u })), cities: [...prev.cities], queues: { ...prev.queues }, logs: [...prev.logs] };
+      const attacker = s.units.find(x => x.id === attackerId);
+      const defender = s.units.find(x => x.id === defenderId);
+      if (!attacker || !defender) return prev;
+      const tile = s.world.tileAt(col, row);
+      const ranged = (attacker.type === 'artillery' || attacker.type === 'bomber');
+      const res = window.Units.resolveCombat(attacker, defender, !!tile.city);
+      defender.hp -= res.defenderHpLoss;
+      if (!ranged) attacker.hp -= res.attackerHpLoss;
+      const atkC = countriesById[attacker.owner], defC = countriesById[defender.owner];
+      const atkU = window.Units.UNIT_TYPES[attacker.type], defU = window.Units.UNIT_TYPES[defender.type];
+      s.logs.push({ turn: s.turn, kind: 'combat',
+        text: `⚔ ${atkC.short} ${atkU.short} → ${defC.short} ${defU.short} (−${res.defenderHpLoss}${!ranged ? ` / −${res.attackerHpLoss}` : ''})` });
+      if (defender.hp <= 0) {
+        s.units = s.units.filter(u => u.id !== defender.id);
+        s.logs.push({ turn: s.turn, kind: 'combat', text: t('log_destroyed', { nation: defC.short, unit: uName(defender.type) }) });
+        if (!ranged && attacker.hp > 0 && atkU.domain === 'land' && tile.terrain !== 'ocean') {
+          attacker.col = col; attacker.row = row;
+          attacker.moves = Math.max(0, attacker.moves - 1);
+          if (tile.city && tile.city.owner !== attacker.owner) {
+            const oldOwner = tile.city.owner;
+            tile.city.owner = attacker.owner;
+            const cityEntry = s.cities.find(c => c.col === col && c.row === row);
+            if (cityEntry) cityEntry.owner = attacker.owner;
+            s.logs.push({ turn: s.turn, kind: 'capture', text: t('log_capture', { city: tile.city.name, from: countriesById[oldOwner].short }) });
+            delete s.queues[oldOwner + ':' + col + ',' + row];
+          }
+        }
+      }
+      if (attacker.hp <= 0) {
+        s.units = s.units.filter(u => u.id !== attacker.id);
+        s.logs.push({ turn: s.turn, kind: 'combat', text: t('log_destroyed', { nation: atkC.short, unit: uName(attacker.type) }) });
+      } else {
+        attacker.acted = true;
+        attacker.moves = 0;
+      }
+      return s;
+    });
+  }
+
+  // Check endgame whenever state changes
+  useEffect(() => {
+    if (!state) return;
+    const e = checkEndgame(state);
+    if (e && !endgame) setEndgame(e);
+  }, [state]);
+
+  // ----- Render -----
+  if (screen === 'select') {
+    return <window.CountrySelect countries={window.WorldData.COUNTRIES} onPick={startGame} />;
+  }
+  if (!state) return null;
+
+  const sel = getSelectedUnit(state);
+  const selTile = selectedHex ? state.world.tileAt(selectedHex.col, selectedHex.row) : null;
+  const player = state.players[state.playerId];
+  const playerCountry = countriesById[state.playerId];
+
+  const hoverTile = hoverHex ? state.world.tileAt(hoverHex.col, hoverHex.row) : null;
+  const hoverUnits = hoverHex ? state.units.filter(u => u.col === hoverHex.col && u.row === hoverHex.row) : [];
+
+  const playerCityCount = state.cities.filter(c => c.owner === state.playerId).length;
+  const playerUnitCount = state.units.filter(u => u.owner === state.playerId).length;
+
+  return (
+    <>
+      <window.TopBar
+        turn={state.turn}
+        year={state.year}
+        playerCountry={playerCountry}
+        gold={player.gold}
+        prod={player.prod}
+        cities={playerCityCount}
+        units={playerUnitCount}
+        onEndTurn={endTurn}
+        aiThinking={aiThinking}
+        aiSpeed={aiSpeed}
+        setAiSpeed={setAiSpeed}
+      />
+      <div className="layout">
+        <div className="map-wrap">
+          <div className={`turn-banner ${aiThinking ? 'ai' : ''}`}>
+            <span className="dot" />
+            {aiThinking
+              ? (aiCountry ? `${countriesById[aiCountry].short} — ${t('banner_ai')}` : t('banner_ai'))
+              : `${playerCountry.short} ${t('banner_orders')}`}
+          </div>
+          <window.HexMap
+            state={state}
+            selectedUnitId={sel?.id}
+            hoverHex={hoverHex}
+            onHexClick={handleHexClick}
+            onHexHover={setHoverHex}
+            reachableSet={new Set([...reachData.reach, ...reachData.attack])}
+            countriesById={countriesById}
+            viewport={viewport}
+          />
+          {hoverTile && (
+            <window.HexTooltip
+              x={tooltipPos.x}
+              y={tooltipPos.y}
+              tile={hoverTile}
+              country={hoverTile.owner ? countriesById[hoverTile.owner] : null}
+              units={hoverUnits}
+              countriesById={countriesById}
+            />
+          )}
+          <window.MiniMap state={state} countriesById={countriesById} playerCountry={playerCountry} />
+        </div>
+        <div className="sidebar">
+          {sel ? (
+            <window.UnitPanel
+              unit={sel}
+              country={countriesById[sel.owner]}
+              onMoveMode={() => setMoveMode(m => !m)}
+              onDisband={() => disbandUnit(sel.id)}
+              moveMode={moveMode}
+              isPlayerUnit={sel.owner === state.playerId}
+              atSea={window.Units.isAtSea(sel, state.world.tileAt(sel.col, sel.row))}
+            />
+          ) : selTile && selTile.city ? null : (
+            <div className="panel-section empty">
+              <h3>{t('command_console')}</h3>
+              <p>{t('console_hint')}</p>
+            </div>
+          )}
+          {selTile && selTile.city && (
+            <window.CityPanel
+              city={selTile.city}
+              country={countriesById[selTile.city.owner]}
+              queue={state.queues[selTile.city.owner + ':' + selTile.col + ',' + selTile.row]}
+              players={state.players}
+              onBuild={handleBuild}
+              isPlayerCity={selTile.city.owner === state.playerId}
+            />
+          )}
+          {selTile && !sel && (
+            <window.HexInfoPanel
+              tile={selTile}
+              country={selTile.owner ? countriesById[selTile.owner] : null}
+              units={state.units.filter(u => u.col === selTile.col && u.row === selTile.row)}
+              countriesById={countriesById}
+            />
+          )}
+          <window.LogPanel logs={state.logs} />
+        </div>
+      </div>
+      {endgame && (
+        <div className="endgame">
+          <div className={`card ${endgame}`}>
+            <h2>{endgame === 'victory' ? t('victory') : t('defeat')}</h2>
+            <p>{endgame === 'victory' ? t('victory_sub') : t('defeat_sub')}</p>
+            <button onClick={() => { setScreen('select'); setState(null); setEndgame(null); }}>{t('new_campaign')}</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+</script>
+</body>
+</html>
