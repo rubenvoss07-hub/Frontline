@@ -685,7 +685,7 @@ button { font-family: inherit; cursor: pointer; }
   // ----- Countries (European powers, May 1939) -----
   const COUNTRIES = [
     {
-      id: 'UK', name: 'United Kingdom', short: 'UK',
+      id: 'UK', name: 'United Kingdom', short: 'UK', team: 'allies',
       color: '#3a8ac6', tint: '#0a2540',
       cx: 7, cy: 8, radius: 6,
       cities: [
@@ -696,7 +696,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'FRA', name: 'France', short: 'FRA',
+      id: 'FRA', name: 'France', short: 'FRA', team: 'allies',
       color: '#7a5cd6', tint: '#2a1a52',
       cx: 13, cy: 11, radius: 5,
       cities: [
@@ -707,7 +707,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'ESP', name: 'Spain', short: 'ESP',
+      id: 'ESP', name: 'Spain', short: 'ESP', team: 'axis',
       color: '#d9ad3a', tint: '#5a3f0a',
       cx: 9, cy: 15, radius: 5,
       cities: [
@@ -718,7 +718,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'GER', name: 'Germany', short: 'GER',
+      id: 'GER', name: 'Germany', short: 'GER', team: 'axis',
       color: '#cfd1d4', tint: '#26282d',
       cx: 17, cy: 11, radius: 5,
       cities: [
@@ -730,7 +730,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'ITA', name: 'Italy', short: 'ITA',
+      id: 'ITA', name: 'Italy', short: 'ITA', team: 'axis',
       color: '#3ac679', tint: '#0e4a2a',
       cx: 19, cy: 16, radius: 4,
       cities: [
@@ -741,7 +741,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'POL', name: 'Poland', short: 'POL',
+      id: 'POL', name: 'Poland', short: 'POL', team: 'allies',
       color: '#d6533c', tint: '#56110a',
       cx: 22, cy: 10, radius: 4,
       cities: [
@@ -752,7 +752,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'NRD', name: 'Nordic Union', short: 'NRD',
+      id: 'NRD', name: 'Nordic Union', short: 'NRD', team: 'allies',
       color: '#5fb3d6', tint: '#0e3a52',
       cx: 18, cy: 5, radius: 8,
       cities: [
@@ -763,7 +763,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'BLK', name: 'Balkans', short: 'BLK',
+      id: 'BLK', name: 'Balkans', short: 'BLK', team: 'axis',
       color: '#a560d6', tint: '#3a1e56',
       cx: 25, cy: 15, radius: 5,
       cities: [
@@ -774,7 +774,7 @@ button { font-family: inherit; cursor: pointer; }
       ],
     },
     {
-      id: 'SOV', name: 'Soviet Union', short: 'SOV',
+      id: 'SOV', name: 'Soviet Union', short: 'SOV', team: 'allies',
       color: '#d62b3a', tint: '#3a0a0e',
       cx: 38, cy: 9, radius: 22,
       cities: [
@@ -873,7 +873,15 @@ button { font-family: inherit; cursor: pointer; }
     return { tiles, cities, W, H, tileAt, idx };
   }
 
-  window.WorldData = { COUNTRIES };
+  // ----- Alliances -----
+  // Two teams: 'axis' (Germany, Italy, Balkans, Spain) vs 'allies' (the rest).
+  const TEAM_OF = {};
+  for (const c of COUNTRIES) TEAM_OF[c.id] = c.team;
+  function sameTeam(a, b) {
+    return a === b || (!!TEAM_OF[a] && TEAM_OF[a] === TEAM_OF[b]);
+  }
+
+  window.WorldData = { COUNTRIES, TEAM_OF, sameTeam };
   window.generateWorld = generateWorld;
 })();
 
@@ -890,12 +898,9 @@ button { font-family: inherit; cursor: pointer; }
     artillery:  { name: 'Artillery',   short: 'ART', glyph: 'art',  attack: 11, defense: 3, range: 2, cost: { gold: 40, prod: 60  }, buildTime: 3, domain: 'land', ranged: 2 },
     fighter:    { name: 'Fighter',     short: 'FTR', glyph: 'ftr',  attack: 7,  defense: 6, range: 6, cost: { gold: 60, prod: 70  }, buildTime: 3, domain: 'air' },
     bomber:     { name: 'Bomber',      short: 'BMR', glyph: 'bmr',  attack: 13, defense: 3, range: 5, cost: { gold: 80, prod: 110 }, buildTime: 5, domain: 'air' },
-    destroyer:  { name: 'Destroyer',   short: 'DST', glyph: 'dst',  attack: 6,  defense: 5, range: 5, cost: { gold: 50, prod: 70  }, buildTime: 3, domain: 'sea' },
-    battleship: { name: 'Battleship',  short: 'BTL', glyph: 'btl',  attack: 12, defense: 9, range: 3, cost: { gold: 100, prod: 150 }, buildTime: 6, domain: 'sea' },
-    submarine:  { name: 'Submarine',   short: 'SUB', glyph: 'sub',  attack: 10, defense: 3, range: 4, cost: { gold: 70, prod: 90  }, buildTime: 4, domain: 'sea', stealth: true },
   };
 
-  const UNIT_ORDER = ['infantry', 'tank', 'artillery', 'fighter', 'bomber', 'destroyer', 'battleship', 'submarine'];
+  const UNIT_ORDER = ['infantry', 'tank', 'artillery', 'fighter', 'bomber'];
 
   function canTraverse(unitDomain, terrain) {
     if (unitDomain === 'air') return true;
@@ -1172,6 +1177,8 @@ button { font-family: inherit; cursor: pointer; }
       u_infantry: 'Infantry', u_tank: 'Tank', u_artillery: 'Artillery',
       u_fighter: 'Fighter', u_bomber: 'Bomber', u_destroyer: 'Destroyer',
       u_battleship: 'Battleship', u_submarine: 'Submarine',
+      alliance: 'Alliance', team_axis: 'Axis', team_allies: 'Allies',
+      ally_tag: 'ALLY', enemy_tag: 'HOSTILE',
     },
     de: {
       brand_kicker: 'KOMMANDO', turn: 'Runde', nation: 'Nation', gold: 'Gold', prod: 'Produktion',
@@ -1912,9 +1919,10 @@ function TopBar({ turn, playerCountry, gold, prod, units, cities, onEndTurn, aiT
   );
 }
 
-function UnitPanel({ unit, country, onMoveMode, onDisband, moveMode, isPlayerUnit, atSea }) {
+function UnitPanel({ unit, country, onMoveMode, onDisband, moveMode, isPlayerUnit, atSea, playerId }) {
   const _ = useLang();
   const T = window.Units.UNIT_TYPES[unit.type];
+  const isAlly = !isPlayerUnit && playerId && window.WorldData.sameTeam(country.id, playerId);
   return (
     <div className="panel-section">
       <h3>{t('selected_unit')}</h3>
@@ -1928,6 +1936,12 @@ function UnitPanel({ unit, country, onMoveMode, onDisband, moveMode, isPlayerUni
           <div className="name">{uName(unit.type)}</div>
           <div className="meta">
             {country.short} · {T.domain.toUpperCase()}{T.stealth ? ' · ' + t('stealth') : ''}
+            {!isPlayerUnit && playerId && (
+              <span style={{ marginLeft: 6, fontWeight: 700,
+                color: isAlly ? 'var(--good)' : 'var(--danger)' }}>
+                · {isAlly ? t('ally_tag') : t('enemy_tag')}
+              </span>
+            )}
             {atSea && <span style={{ marginLeft: 6, color: '#6da3e6' }}>· {t('at_sea')}</span>}
           </div>
         </div>
@@ -2050,13 +2064,26 @@ function LogPanel({ logs }) {
   );
 }
 
-function HexTooltip({ x, y, tile, country, units, countriesById }) {
+function HexTooltip({ x, y, tile, country, units, countriesById, playerId }) {
   const _ = useLang();
   const T = tile;
+  const foreign = country && playerId && country.id !== playerId;
+  const isAlly = foreign && window.WorldData.sameTeam(country.id, playerId);
   return (
     <div className="tooltip" style={{ left: x + 14, top: y + 14 }}>
       <div className="row"><span className="k">{t('terrain')}</span><span className="v">{terrName(T.terrain)}</span></div>
-      <div className="row"><span className="k">{t('owner_lbl')}</span><span className="v" style={{ color: country ? country.color : '#aaa' }}>{country ? country.name : t('neutral_lc')}</span></div>
+      <div className="row">
+        <span className="k">{t('owner_lbl')}</span>
+        <span className="v" style={{ color: country ? country.color : '#aaa' }}>
+          {country ? country.name : t('neutral_lc')}
+          {foreign && (
+            <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em',
+              color: isAlly ? 'var(--good)' : 'var(--danger)' }}>
+              {isAlly ? t('ally_tag') : t('enemy_tag')}
+            </span>
+          )}
+        </span>
+      </div>
       {T.city && (
         <div className="row"><span className="k">{t('city')}</span><span className="v">{T.city.name}</span></div>
       )}
@@ -2102,10 +2129,17 @@ function CountrySelect({ countries, onPick }) {
                 <div className="nm">{c.name}</div>
                 <div className="tag">{c.short}</div>
               </div>
+              <span className="mono" style={{
+                marginLeft: 'auto', fontSize: 9, letterSpacing: '0.14em',
+                padding: '3px 7px', borderRadius: 3, whiteSpace: 'nowrap',
+                color: c.team === 'axis' ? '#e89b80' : '#86c0ec',
+                border: '1px solid ' + (c.team === 'axis' ? '#7a3a2a' : '#2a5a7a'),
+                background: c.team === 'axis' ? 'rgba(120,40,30,0.22)' : 'rgba(30,70,110,0.22)',
+              }}>{c.team === 'axis' ? t('team_axis') : t('team_allies')}</span>
             </div>
             <div className="stats">
               <span>{t('cities')} <b>{c.cities.length}</b></span>
-              <span>{t('doctrine')} <b>{c.doctrine || t('combined_arms')}</b></span>
+              <span>{t('alliance')} <b style={{ color: c.team === 'axis' ? '#e89b80' : '#86c0ec' }}>{c.team === 'axis' ? t('team_axis') : t('team_allies')}</b></span>
             </div>
           </button>
         ))}
@@ -2177,11 +2211,11 @@ function makeInitialState(playerId) {
   // Starting forces — historically flavored balance for May 1939.
   // Strong industrial powers get more / better units. Smaller neutrals get less.
   const STARTING_FORCES = {
-    UK:  ['infantry', 'infantry', 'destroyer', 'fighter'],
+    UK:  ['infantry', 'infantry', 'artillery', 'fighter'],
     FRA: ['infantry', 'infantry', 'infantry', 'tank'],
     ESP: ['infantry', 'infantry'],
     GER: ['infantry', 'infantry', 'infantry', 'tank', 'tank', 'fighter'],
-    ITA: ['infantry', 'infantry', 'tank', 'destroyer'],
+    ITA: ['infantry', 'infantry', 'tank', 'artillery'],
     POL: ['infantry', 'infantry', 'tank'],
     NRD: ['infantry', 'infantry'],
     BLK: ['infantry', 'infantry'],
@@ -2327,7 +2361,7 @@ function App() {
     const range = (sel.type === 'artillery' || sel.type === 'bomber') ? 2 : 1;
     const attack = new Set();
     for (const u of state.units) {
-      if (u.owner === sel.owner) continue;
+      if (window.WorldData.sameTeam(u.owner, sel.owner)) continue;
       const d = window.HexMath.hexDistance(sel.col, sel.row, u.col, u.row);
       if (d <= range) attack.add(u.col + ',' + u.row);
     }
@@ -2335,7 +2369,7 @@ function App() {
     if (T.domain === 'land') {
       for (const n of window.HexMath.neighbors(sel.col, sel.row)) {
         const t = state.world.tileAt(n.col, n.row);
-        if (t.city && t.city.owner !== sel.owner) {
+        if (t.city && !window.WorldData.sameTeam(t.city.owner, sel.owner)) {
           attack.add(n.col + ',' + n.row);
         }
       }
@@ -2387,7 +2421,7 @@ function App() {
       u.moves = Math.max(0, u.moves - stepCount);
       // Capture city?
       const tile = s.world.tileAt(col, row);
-      if (tile.city && tile.city.owner !== u.owner && window.Units.UNIT_TYPES[u.type].domain === 'land') {
+      if (tile.city && !window.WorldData.sameTeam(tile.city.owner, u.owner) && window.Units.UNIT_TYPES[u.type].domain === 'land') {
         const oldOwner = tile.city.owner;
         tile.city.owner = u.owner;
         const cityEntry = s.cities.find(c => c.col === col && c.row === row);
@@ -2409,7 +2443,7 @@ function App() {
     setState(prev => {
       const s = { ...prev, units: prev.units.map(u => ({ ...u })) };
       const attacker = s.units.find(x => x.id === unit.id);
-      const defender = s.units.find(x => x.col === col && x.row === row && x.owner !== attacker.owner);
+      const defender = s.units.find(x => x.col === col && x.row === row && !window.WorldData.sameTeam(x.owner, attacker.owner));
       const targetTile = s.world.tileAt(col, row);
       const T = window.Units.UNIT_TYPES[attacker.type];
       const range = (attacker.type === 'artillery' || attacker.type === 'bomber') ? 2 : 1;
@@ -2435,7 +2469,7 @@ function App() {
             attacker.row = row;
             attacker.moves = Math.max(0, attacker.moves - 1);
             // Capture if city
-            if (targetTile.city && targetTile.city.owner !== attacker.owner) {
+            if (targetTile.city && !window.WorldData.sameTeam(targetTile.city.owner, attacker.owner)) {
               const oldOwner = targetTile.city.owner;
               targetTile.city.owner = attacker.owner;
               const cityEntry = s.cities.find(c => c.col === col && c.row === row);
@@ -2452,7 +2486,7 @@ function App() {
           attacker.acted = true;
           attacker.moves = 0;
         }
-      } else if (targetTile.city && targetTile.city.owner !== attacker.owner && T.domain === 'land' && d === 1) {
+      } else if (targetTile.city && !window.WorldData.sameTeam(targetTile.city.owner, attacker.owner) && T.domain === 'land' && d === 1) {
         // Capture undefended adjacent city
         attacker.col = col; attacker.row = row;
         attacker.moves = Math.max(0, attacker.moves - 1);
@@ -2565,13 +2599,17 @@ function App() {
   function checkEndgame(s) {
     const playerAlive = s.players[s.playerId].alive;
     if (!playerAlive) return 'defeat';
-    // win = controlling all enemy capitals (city #0 of every country)
-    const capitals = window.WorldData.COUNTRIES.map(c => c.cities[0]);
-    const ownsAllCapitals = capitals.every(cap => {
+    const playerTeam = countriesById[s.playerId].team;
+    // Victory: every enemy-team capital (city #0) is held by a country on the player's team.
+    const enemyCapitals = window.WorldData.COUNTRIES
+      .filter(c => c.team !== playerTeam)
+      .map(c => c.cities[0]);
+    const wonAll = enemyCapitals.every(cap => {
       const cityEntry = s.cities.find(c => c.name === cap.name);
-      return cityEntry && cityEntry.owner === s.playerId;
+      return cityEntry && countriesById[cityEntry.owner]
+        && countriesById[cityEntry.owner].team === playerTeam;
     });
-    if (ownsAllCapitals) return 'victory';
+    if (wonAll) return 'victory';
     return null;
   }
 
@@ -2677,7 +2715,6 @@ function App() {
     else if ((counts.tank || 0) < 3) preferences.push('tank', 'artillery');
     else if (totalAir < 2) preferences.push('fighter', 'bomber');
     else preferences.push('tank', 'infantry', 'artillery', 'fighter');
-    if (Math.random() < 0.18) preferences.unshift('destroyer');
     for (const ty of preferences) {
       const T = window.Units.UNIT_TYPES[ty];
       const p = s.players[country];
@@ -2694,7 +2731,7 @@ function App() {
     if (!atSea) {
       const adj = window.HexMath.neighbors(unit.col, unit.row);
       for (const n of adj) {
-        const target = s.units.find(u => u.col === n.col && u.row === n.row && u.owner !== country);
+        const target = s.units.find(u => u.col === n.col && u.row === n.row && !window.WorldData.sameTeam(u.owner, country));
         if (target) {
           const tt = s.world.tileAt(n.col, n.row);
           // Sea units can only "attack" ocean tiles; land units can attack land tiles
@@ -2708,7 +2745,7 @@ function App() {
     const findCity = () => {
       let best = null, bestD = Infinity;
       for (const c of s.cities) {
-        if (c.owner === country) continue;
+        if (window.WorldData.sameTeam(c.owner, country)) continue;
         const d = window.HexMath.hexDistance(unit.col, unit.row, c.col, c.row);
         if (d < bestD) { bestD = d; best = c; }
       }
@@ -2717,7 +2754,7 @@ function App() {
     const findEnemy = () => {
       let best = null, bestD = Infinity;
       for (const u of s.units) {
-        if (u.owner === country) continue;
+        if (window.WorldData.sameTeam(u.owner, country)) continue;
         const d = window.HexMath.hexDistance(unit.col, unit.row, u.col, u.row);
         if (d < bestD) { bestD = d; best = u; }
       }
@@ -2742,8 +2779,8 @@ function App() {
     if (!path || !path.length) return null;
     const next = path[0];
     if (!isPass(next.col, next.row)) {
-      // try to attack if next is target with enemy
-      const en = s.units.find(u => u.col === next.col && u.row === next.row && u.owner !== country);
+      // try to attack if next tile is blocked by an enemy (not an ally)
+      const en = s.units.find(u => u.col === next.col && u.row === next.row && !window.WorldData.sameTeam(u.owner, country));
       if (en) return { type: 'attack', attackerId: unit.id, defenderId: en.id, col: next.col, row: next.row };
       return null;
     }
@@ -2758,7 +2795,7 @@ function App() {
       u.col = col; u.row = row;
       u.moves = Math.max(0, u.moves - 1);
       const tile = s.world.tileAt(col, row);
-      if (tile.city && tile.city.owner !== u.owner && window.Units.UNIT_TYPES[u.type].domain === 'land') {
+      if (tile.city && !window.WorldData.sameTeam(tile.city.owner, u.owner) && window.Units.UNIT_TYPES[u.type].domain === 'land') {
         const oldOwner = tile.city.owner;
         tile.city.owner = u.owner;
         const cityEntry = s.cities.find(c => c.col === col && c.row === row);
@@ -2792,7 +2829,7 @@ function App() {
         if (!ranged && attacker.hp > 0 && atkU.domain === 'land' && tile.terrain !== 'ocean') {
           attacker.col = col; attacker.row = row;
           attacker.moves = Math.max(0, attacker.moves - 1);
-          if (tile.city && tile.city.owner !== attacker.owner) {
+          if (tile.city && !window.WorldData.sameTeam(tile.city.owner, attacker.owner)) {
             const oldOwner = tile.city.owner;
             tile.city.owner = attacker.owner;
             const cityEntry = s.cities.find(c => c.col === col && c.row === row);
@@ -2878,6 +2915,7 @@ function App() {
               country={hoverTile.owner ? countriesById[hoverTile.owner] : null}
               units={hoverUnits}
               countriesById={countriesById}
+              playerId={state.playerId}
             />
           )}
           <window.MiniMap state={state} countriesById={countriesById} playerCountry={playerCountry} />
@@ -2892,6 +2930,7 @@ function App() {
               moveMode={moveMode}
               isPlayerUnit={sel.owner === state.playerId}
               atSea={window.Units.isAtSea(sel, state.world.tileAt(sel.col, sel.row))}
+              playerId={state.playerId}
             />
           ) : selTile && selTile.city ? null : (
             <div className="panel-section empty">
